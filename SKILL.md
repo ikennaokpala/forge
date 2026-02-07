@@ -211,9 +211,9 @@ curl -X POST http://localhost:${BACKEND_PORT}/${SEED_ENDPOINT} \
 
 ---
 
-## PHASE 1: BEHAVIORAL SPECIFICATION
+## PHASE 1: BEHAVIORAL SPECIFICATION & ARCHITECTURE RECORDS
 
-**Before testing, verify Gherkin specs exist for the target bounded context.**
+**Before testing, verify Gherkin specs and architecture decision records exist for the target bounded context.**
 
 Behavioral specifications define WHAT the product does from the user's perspective. Every test traces back to a Gherkin scenario. If tests pass but specs fail, the product is broken.
 
@@ -258,6 +258,41 @@ If specs are missing for a target context, the Specification Verifier agent crea
 4. Write to `${SPEC_DIR}/[context].feature`
 5. Map each scenario to its corresponding test function
 
+### Agent-Optimized ADR Generation
+
+When Forge discovers a bounded context without an Architecture Decision Record, the Specification Verifier generates one. ADRs follow an agent-optimized format designed for machine consumption:
+
+```markdown
+# ADR-NNN: [Context] Architecture Decision
+
+## Status
+Proposed | Accepted | Deprecated | Superseded by ADR-XXX
+
+## MUST
+- [Explicit required behaviors with contract references]
+- [Link to OpenAPI spec: /api/v1/[context]/openapi.json]
+- [Required integration patterns]
+
+## MUST NOT
+- [Explicit forbidden patterns]
+- [Anti-patterns to avoid]
+- [Coupling violations]
+
+## Verification
+- Command: [command to verify this decision holds]
+- Expected: [expected output or exit code]
+
+## Dependencies
+- Depends on: [list of upstream contexts with ADR links]
+- Blocks: [list of downstream contexts with ADR links]
+```
+
+**ADR Storage:**
+- ADRs are stored in `docs/decisions/` or the project-configured ADR directory
+- Each bounded context has exactly one ADR
+- ADRs are updated when contracts change or new dependencies are discovered
+- The Specification Verifier agent includes ADR generation in its workflow
+
 ---
 
 ## PHASE 2: CONTRACT & DEPENDENCY VALIDATION
@@ -274,6 +309,38 @@ Before running tests, verify API response schemas match expected DTOs:
 ```
 
 Contract violations are treated as Gate 7 failures and must be resolved before functional testing proceeds.
+
+### Shared Types Validation
+
+For bounded contexts that share dependencies, validate type consistency across context boundaries:
+
+1. **Identify shared DTOs/models** — For each context, extract types used in API requests and responses
+2. **Cross-reference types** — Compare DTOs between contexts that share dependencies (from the dependency graph)
+3. **Flag type mismatches** — e.g., context A expects `userId: string` but context B sends `userId: number`
+4. **Validate value objects** — Ensure value objects (email, money, address) follow consistent patterns across contexts
+5. **Report violations** — Flag as pre-Gate warnings with specific file locations and expected vs actual types
+
+```json
+{
+  "sharedTypeViolation": {
+    "type": "UserId",
+    "contextA": { "name": "payments", "file": "types/payment.ts", "definition": "string" },
+    "contextB": { "name": "orders", "file": "types/order.ts", "definition": "number" },
+    "severity": "error"
+  }
+}
+```
+
+### Cross-Cutting Foundation Validation
+
+Verify cross-cutting concerns are consistent across all bounded contexts:
+
+- **Auth patterns** — Same header format (`Authorization: Bearer <token>`), same token validation approach across all endpoints
+- **Error response format** — All API endpoints return errors in the project's standard format (consistent structure, error codes, HTTP status codes)
+- **Logging patterns** — Consistent log levels, structured format, and correlation IDs across contexts
+- **Pagination format** — Consistent pagination parameters and response format across collection endpoints
+
+Cross-cutting violations are reported as warnings before Gate evaluation begins.
 
 ### Dependency Graph
 
@@ -328,6 +395,40 @@ npx @claude-flow/cli@latest memory search --query "defect prediction" --namespac
 
 ---
 
+## MODEL ROUTING
+
+Forge routes each agent to the appropriate model tier based on task complexity, optimizing for cost without sacrificing quality:
+
+| Agent | Model | Rationale |
+|-------|-------|-----------|
+| Specification Verifier | `sonnet` | Reads code + generates Gherkin — moderate reasoning |
+| Test Runner | `haiku` | Structured execution, output parsing — low reasoning |
+| Failure Analyzer | `sonnet` | Root cause analysis — moderate reasoning |
+| Bug Fixer | `opus` | First-principles code fixes — high reasoning |
+| Quality Gate Enforcer | `haiku` | Threshold comparison — low reasoning |
+| Accessibility Auditor | `sonnet` | Code analysis + WCAG rules — moderate reasoning |
+| Auto-Committer | `haiku` | Git operations, message formatting — low reasoning |
+| Learning Optimizer | `sonnet` | Pattern analysis, prediction — moderate reasoning |
+
+Projects can override model assignments in `forge.config.yaml`:
+
+```yaml
+# forge.config.yaml — Model routing overrides (optional)
+model_routing:
+  spec-verifier: sonnet
+  test-runner: haiku
+  failure-analyzer: sonnet
+  bug-fixer: opus
+  gate-enforcer: haiku
+  accessibility-auditor: sonnet
+  auto-committer: haiku
+  learning-optimizer: sonnet
+```
+
+When no override is specified, the defaults above are used. This routing reduces token cost by ~60% compared to running all agents on the highest-tier model.
+
+---
+
 ## PHASE 4: SPAWN AUTONOMOUS AGENTS
 
 Claude Code MUST spawn these 8 agents in a SINGLE message with `run_in_background: true`:
@@ -335,6 +436,7 @@ Claude Code MUST spawn these 8 agents in a SINGLE message with `run_in_backgroun
 ```javascript
 // Agent 1: Specification Verifier
 Task({
+  model: "sonnet",
   prompt: `You are the Specification Verifier agent. Your mission:
 
     1. VERIFY backend is running: curl -sf http://localhost:${BACKEND_PORT}/${HEALTH_ENDPOINT}
@@ -357,6 +459,18 @@ Task({
        npx @claude-flow/cli@latest memory store --key "specs-[context]-[timestamp]" \
          --value "[spec status JSON]" --namespace forge-specs
 
+    CONSTRAINTS:
+    - NEVER generate specs for code you haven't read
+    - NEVER assume UI elements exist without checking implementation
+    - NEVER create scenarios that duplicate existing coverage
+    - NEVER modify existing test files — only spec files
+
+    ACCEPTANCE:
+    - Every implementation file has at least one Gherkin scenario
+    - Spec-to-test mapping has zero unmapped entries
+    - All generated scenarios follow Given/When/Then format
+    - Results stored in forge-specs namespace
+
     Output: List of all Gherkin scenarios with their mapped test functions, and any gaps found.`,
   subagent_type: "researcher",
   description: "Spec Verification",
@@ -365,6 +479,7 @@ Task({
 
 // Agent 2: Test Runner
 Task({
+  model: "haiku",
   prompt: `You are the Test Runner agent. Your mission:
 
     1. VERIFY backend is running
@@ -380,7 +495,19 @@ Task({
        npx @claude-flow/cli@latest memory store \
          --key "test-run-[timestamp]" \
          --value "[parsed results JSON]" \
-         --namespace forge-results`,
+         --namespace forge-results
+
+    CONSTRAINTS:
+    - NEVER skip failing tests
+    - NEVER modify test code or source code
+    - NEVER mock API calls or stub responses
+    - NEVER continue if backend health check fails
+
+    ACCEPTANCE:
+    - All test results stored in memory with structured format
+    - Zero unparsed failures — every failure has testId, error, stackTrace, file, line
+    - Predicted-to-fail tests executed first
+    - Results include Gherkin scenario mapping for every test`,
   subagent_type: "tester",
   description: "Test Runner",
   run_in_background: true
@@ -388,6 +515,7 @@ Task({
 
 // Agent 3: Failure Analyzer
 Task({
+  model: "sonnet",
   prompt: `You are the Failure Analyzer agent. Your mission:
 
     1. Monitor memory for new test results from Test Runner
@@ -412,7 +540,19 @@ Task({
        npx @claude-flow/cli@latest memory store \
          --key "analysis-[testId]-[timestamp]" \
          --value "[analysis JSON]" \
-         --namespace forge-results`,
+         --namespace forge-results
+
+    CONSTRAINTS:
+    - NEVER assume root cause without stack trace evidence
+    - NEVER recommend fixes for passing tests
+    - NEVER skip dependency graph impact analysis
+    - NEVER override confidence tier thresholds
+
+    ACCEPTANCE:
+    - Every failure has a root cause category and affected file
+    - Zero unanalyzed failures
+    - Dependency impact documented for every failure
+    - Pattern search executed for every error type`,
   subagent_type: "researcher",
   description: "Failure Analyzer",
   run_in_background: true
@@ -420,6 +560,7 @@ Task({
 
 // Agent 4: Bug Fixer
 Task({
+  model: "opus",
   prompt: `You are the Bug Fixer agent. Your mission:
 
     1. Retrieve failure analysis from memory
@@ -455,7 +596,19 @@ Task({
          --namespace forge-patterns
 
     5. Signal Test Runner to re-run affected tests
-    6. Signal Quality Gate Enforcer to check all 7 gates`,
+    6. Signal Quality Gate Enforcer to check all 7 gates
+
+    CONSTRAINTS:
+    - NEVER change test assertions to make tests pass
+    - NEVER modify Gherkin specs to match broken behavior
+    - NEVER introduce new dependencies without flagging
+    - NEVER apply fixes without reading both test file and source file
+
+    ACCEPTANCE:
+    - Every applied fix has a targeted test re-run result
+    - Zero fixes without verification
+    - Fix pattern stored with initial confidence score
+    - Cascade impacts identified and flagged for re-testing`,
   subagent_type: "coder",
   description: "Bug Fixer",
   run_in_background: true
@@ -463,6 +616,7 @@ Task({
 
 // Agent 5: Quality Gate Enforcer
 Task({
+  model: "haiku",
   prompt: `You are the Quality Gate Enforcer agent. Your mission:
 
     After each fix cycle, evaluate ALL 7 quality gates:
@@ -480,10 +634,15 @@ Task({
     - Critical paths: authentication, payment, core workflows
     - Non-critical paths: preferences, history, settings
 
-    GATE 4 — SECURITY (0 violations):
+    GATE 4 — SECURITY (0 critical/high violations):
     - No hardcoded API keys, tokens, or secrets in test files
     - No hardcoded test credentials (use env vars or test fixtures)
     - Secure storage patterns used (no plaintext sensitive data)
+    - No SQL injection vectors in dynamic queries
+    - No XSS vectors in rendered output
+    - No path traversal in file operations
+    - Dependencies have no known critical CVEs (when lockfile available)
+    - When AQE available: delegate to security-scanner for full SAST analysis
 
     GATE 5 — ACCESSIBILITY (WCAG AA):
     - All interactive elements have accessible labels
@@ -514,7 +673,19 @@ Task({
       --value "[gate results JSON]" \
       --namespace forge-state
 
-    ONLY signal Auto-Committer when ALL 7 GATES PASS.`,
+    ONLY signal Auto-Committer when ALL 7 GATES PASS.
+
+    CONSTRAINTS:
+    - NEVER approve a commit with ANY blocking gate failure
+    - NEVER lower thresholds below defined minimums
+    - NEVER skip gate evaluation — all 7 gates must be assessed
+    - NEVER mark a gate as PASS without evidence
+
+    ACCEPTANCE:
+    - Gate results stored in memory with PASS/FAIL/SKIP for all 7 gates
+    - Every FAIL includes specific details of what failed
+    - Every SKIP includes reason for skipping
+    - Auto-Committer only signaled when all blocking gates pass`,
   subagent_type: "reviewer",
   description: "Quality Gate Enforcer",
   run_in_background: true
@@ -522,6 +693,7 @@ Task({
 
 // Agent 6: Accessibility Auditor
 Task({
+  model: "sonnet",
   prompt: `You are the Accessibility Auditor agent. Your mission:
 
     1. For each screen/page/component in the target context, audit:
@@ -556,7 +728,19 @@ Task({
        npx @claude-flow/cli@latest memory store \
          --key "a11y-[context]-[timestamp]" \
          --value "[audit JSON]" \
-         --namespace forge-state`,
+         --namespace forge-state
+
+    CONSTRAINTS:
+    - NEVER skip interactive elements during audit
+    - NEVER report false positives for decorative images
+    - NEVER ignore focus/tab order analysis
+    - NEVER apply fixes — only report findings for Bug Fixer
+
+    ACCEPTANCE:
+    - Every interactive element audited
+    - Findings stored with severity, element, file, line, issue, fix
+    - Zero unaudited interactive elements in target context
+    - WCAG AA compliance level assessed for every screen`,
   subagent_type: "analyst",
   description: "Accessibility Auditor",
   run_in_background: true
@@ -564,6 +748,7 @@ Task({
 
 // Agent 7: Auto-Committer
 Task({
+  model: "haiku",
   prompt: `You are the Auto-Committer agent. Your mission:
 
     1. Monitor for successful fixes where ALL 7 QUALITY GATES PASS
@@ -605,7 +790,19 @@ Task({
        npx @claude-flow/cli@latest memory store \
          --key "last-green-commit" \
          --value "[hash]" \
-         --namespace forge-state`,
+         --namespace forge-state
+
+    CONSTRAINTS:
+    - NEVER use git add -A or git add .
+    - NEVER commit without all 7 gates passing
+    - NEVER amend previous commits
+    - NEVER push to remote — only local commits
+
+    ACCEPTANCE:
+    - Commit message includes Behavioral Spec, Root Cause, Fix Applied, all 7 gate statuses
+    - Only fixed files are staged (no unrelated files)
+    - Commit hash stored in forge-commits namespace
+    - Last green commit updated in forge-state namespace`,
   subagent_type: "reviewer",
   description: "Auto-Committer",
   run_in_background: true
@@ -613,6 +810,7 @@ Task({
 
 // Agent 8: Learning Optimizer
 Task({
+  model: "sonnet",
   prompt: `You are the Learning Optimizer agent. Your mission:
 
     1. After each test cycle, analyze patterns:
@@ -657,7 +855,19 @@ Task({
 
     6. Generate recommendations for test improvements
     7. Export learning metrics:
-       npx @claude-flow/cli@latest neural train --pattern-type forge-fixes --epochs 5`,
+       npx @claude-flow/cli@latest neural train --pattern-type forge-fixes --epochs 5
+
+    CONSTRAINTS:
+    - NEVER promote a pattern that failed in the current cycle
+    - NEVER delete patterns — only demote below Bronze threshold
+    - NEVER override confidence scores without evidence from test results
+    - NEVER generate predictions without historical data
+
+    ACCEPTANCE:
+    - All applied patterns have updated confidence scores
+    - Prediction stored for next run with context-level probabilities
+    - Coverage status updated in forge-state namespace
+    - Zero patterns promoted without success evidence`,
   subagent_type: "researcher",
   description: "Learning Optimizer",
   run_in_background: true
@@ -675,7 +885,7 @@ Task({
 | 1. Functional | All tests pass | 100% pass rate | YES |
 | 2. Behavioral | Gherkin scenarios satisfied | 100% of targeted scenarios | YES |
 | 3. Coverage | Path coverage | >=85% overall, >=95% critical | YES (critical only) |
-| 4. Security | No hardcoded secrets, secure storage | 0 violations | YES |
+| 4. Security | No hardcoded secrets, secure storage, SAST checks | 0 critical/high violations | YES |
 | 5. Accessibility | Accessible labels, target sizes, contrast | WCAG AA | Warning only |
 | 6. Resilience | Offline handling, timeout handling, error states | Tested for target context | Warning only |
 | 7. Contract | API response matches expected schema | 0 mismatches | YES |
@@ -719,6 +929,33 @@ When gates fail, failures are categorized for targeted re-runs:
 │  Gate failures are categorized for targeted re-runs (not full re-run) │
 └────────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## REAL-TIME PROGRESS REPORTING
+
+Each agent emits structured progress events during execution for observability:
+
+```json
+{"agent": "spec-verifier", "event": "spec_generated", "context": "payments", "scenarios": 12}
+{"agent": "test-runner", "event": "test_started", "context": "payments", "test": "user_can_pay"}
+{"agent": "test-runner", "event": "test_completed", "context": "payments", "passed": 10, "failed": 2}
+{"agent": "failure-analyzer", "event": "root_cause_found", "test": "user_can_pay", "cause": "timeout"}
+{"agent": "bug-fixer", "event": "fix_applied", "file": "payments.ts", "confidence": 0.92}
+{"agent": "gate-enforcer", "event": "gate_evaluated", "gate": "functional", "status": "PASS"}
+{"agent": "auto-committer", "event": "committed", "hash": "abc123", "tests_fixed": 2}
+{"agent": "learning-optimizer", "event": "pattern_updated", "pattern": "fix-timeout-xyz", "tier": "gold"}
+```
+
+**Progress File:**
+- Events are appended to `.forge/progress.jsonl` (one JSON object per line)
+- File is created at the start of each Forge run and truncated
+- Tools can tail this file for real-time monitoring: `tail -f .forge/progress.jsonl`
+
+**Integration with Agentic QE AG-UI:**
+- When the AQE AG-UI protocol is available, events stream directly to the user interface
+- Users see live progress: which gate is being evaluated, which test is running, which fix is being applied
+- When running in Claude Code without AG-UI, progress is visible through agent output files
 
 ---
 
@@ -853,6 +1090,38 @@ For each target context, inject controlled failures:
 4. **Concurrent mutations** → Multiple clients modify same resource → verify conflict handling
 5. **Session expiry** → Token expires mid-flow → verify re-auth prompt
 
+### Visual Regression Testing
+
+For UI-heavy projects, Forge captures and compares screenshots to detect unintended visual changes:
+
+1. **Before fix** — Capture baseline screenshots of all screens in the target context
+2. **After fix** — Capture new screenshots of the same screens
+3. **Compare** — Pixel-by-pixel comparison with configurable threshold (default: 0.1% diff tolerance)
+4. **Report** — Flag visual regressions as Gate 5 (Accessibility) warnings
+5. **Store** — Save screenshot diffs in memory for review
+
+**Screenshot Capture by Platform:**
+
+| Platform | Method |
+|----------|--------|
+| Web (Playwright) | `page.screenshot({ fullPage: true })` |
+| Web (Cypress) | `cy.screenshot()` |
+| Flutter | `await tester.binding.setSurfaceSize(size); await expectLater(find.byType(App), matchesGoldenFile('name.png'))` |
+| Mobile (native) | Platform-specific screenshot capture |
+
+**Configuration:**
+
+```yaml
+# forge.config.yaml — Visual regression settings (optional)
+visual_regression:
+  enabled: true
+  threshold: 0.001  # 0.1% pixel diff tolerance
+  screenshot_dir: .forge/screenshots
+  full_page: true
+```
+
+When Agentic QE is available, delegate to the `visual-tester` agent for parallel viewport comparison across multiple screen sizes.
+
 ---
 
 ## INVOCATION MODES
@@ -908,6 +1177,69 @@ For each target context, inject controlled failures:
 | `forge-specs` | Gherkin specifications | `specs-[context]-[timestamp]` |
 | `forge-contracts` | API contract snapshots | `contract-snapshot-[timestamp]` |
 | `forge-predictions` | Defect prediction history | `prediction-[date]` |
+
+---
+
+## OPTIONAL: AGENTIC QE INTEGRATION
+
+Forge can optionally integrate with the [Agentic QE](https://github.com/proffesor-for-testing/agentic-qe) framework via MCP for enhanced capabilities. **All AQE features are additive — Forge works identically without AQE.**
+
+### Detection
+
+On startup, Forge checks for AQE availability:
+
+```bash
+# Check if agentic-qe MCP server is registered
+claude mcp list | grep -q "aqe" && echo "AQE available" || echo "AQE not available — using defaults"
+```
+
+### Enhanced Capabilities When AQE Is Available
+
+| Forge Component | Without AQE (Default) | With AQE |
+|----------------|----------------------|----------|
+| **Pattern Storage** | claude-flow memory (`forge-patterns` namespace) | ReasoningBank — HNSW vector-indexed, 150x faster pattern search, experience replay |
+| **Defect Prediction** | Historical failure rates + file changes | `defect-intelligence` domain — root-cause-analyzer + defect-predictor agents |
+| **Security Scanning** | Gate 4 static checks (secrets, injection vectors) | `security-compliance` domain — full SAST/DAST via security-scanner agent |
+| **Accessibility Audit** | Forge Accessibility Auditor agent | `visual-accessibility` domain — visual-tester + accessibility-auditor agents |
+| **Contract Testing** | Gate 7 schema validation | `contract-testing` domain — contract-validator + graphql-tester agents |
+| **Progress Reporting** | `.forge/progress.jsonl` file | AG-UI streaming protocol for real-time UI updates |
+
+### Fallback Behavior
+
+When AQE is NOT available, Forge falls back to its built-in behavior for every capability. No configuration is required — the skill auto-detects and adapts.
+
+### Configuration
+
+```yaml
+# forge.config.yaml — AQE integration settings (optional)
+integrations:
+  agentic-qe:
+    enabled: true  # auto-detected if not specified
+    domains:
+      - defect-intelligence
+      - security-compliance
+      - visual-accessibility
+      - contract-testing
+    reasoning_bank:
+      enabled: true  # replaces claude-flow memory for forge-patterns namespace
+    ag_ui:
+      enabled: true  # stream progress events to AG-UI protocol
+```
+
+### AQE Agent Delegation Map
+
+When AQE is enabled, Forge delegates specific subtasks to specialized AQE agents:
+
+| Forge Agent | AQE Domain | AQE Agents Used |
+|-------------|-----------|-----------------|
+| Specification Verifier | `requirements-validation` | bdd-generator, requirements-validator |
+| Failure Analyzer | `defect-intelligence` | root-cause-analyzer, defect-predictor |
+| Quality Gate Enforcer (Gate 4) | `security-compliance` | security-scanner, security-auditor |
+| Accessibility Auditor | `visual-accessibility` | visual-tester, accessibility-auditor |
+| Quality Gate Enforcer (Gate 7) | `contract-testing` | contract-validator, graphql-tester |
+| Learning Optimizer | `learning-optimization` | learning-coordinator, pattern-learner |
+
+Forge agents that have no AQE equivalent (Test Runner, Bug Fixer, Auto-Committer) continue to run as built-in agents regardless of AQE availability.
 
 ---
 
@@ -1146,7 +1478,9 @@ Pattern Stored: fix-[error-type]-[hash]
 
 ---
 
-## ROLLBACK CAPABILITY
+## ROLLBACK & CONFLICT RESOLUTION
+
+### Rollback Capability
 
 If a fix introduces regressions:
 
@@ -1166,6 +1500,36 @@ npx @claude-flow/cli@latest memory store \
 # Demote the fix pattern confidence (-0.10)
 # Learning Optimizer will handle this automatically
 ```
+
+### Fix Conflict Protocol
+
+When Bug Fixer's fix causes a cascade regression (tests in dependent contexts fail):
+
+1. **Halt** — Stop the fix loop for the affected context
+2. **Re-analyze** — Failure Analyzer examines both the original failure AND the cascade failure
+3. **Categorize** — Compare root cause categories:
+   - **Different root cause** → The fix is kept; the cascade failure is treated as a new, independent failure in the next loop iteration
+   - **Same root cause** → The fix is reverted and the pattern is demoted (-0.10 confidence)
+4. **Revert limit** — Maximum 2 revert cycles per test before escalating to user review
+5. **Escalation** — If 2 reverts occur for the same test, Forge pauses and reports:
+   ```
+   ESCALATION: Test [testId] has regressed 2x after fix attempts.
+   Original failure: [description]
+   Cascade failure: [description]
+   Attempted fixes: [list]
+   Recommendation: Manual review required.
+   ```
+
+### Agent Disagreement Resolution
+
+When two agents disagree (e.g., Bug Fixer wants to change a file that Spec Verifier says shouldn't change):
+
+1. **Quality Gate Enforcer acts as arbiter** — It evaluates both proposed states
+2. **The change that results in more gates passing wins**
+3. **Tie-breaking order:**
+   - Fewer files changed (prefer minimal diff)
+   - Higher confidence tier (prefer proven patterns)
+   - Bug Fixer defers to Spec Verifier (specs are source of truth)
 
 ---
 
@@ -1246,7 +1610,7 @@ After Forge completes:
 - [ ] Gate 1 (Functional): All tests pass
 - [ ] Gate 2 (Behavioral): All targeted Gherkin scenarios satisfied
 - [ ] Gate 3 (Coverage): >=85% overall, >=95% critical paths
-- [ ] Gate 4 (Security): No hardcoded secrets
+- [ ] Gate 4 (Security): No hardcoded secrets, no injection vectors, no critical CVEs
 - [ ] Gate 5 (Accessibility): WCAG AA compliance checked
 - [ ] Gate 6 (Resilience): Offline/timeout/error states tested
 - [ ] Gate 7 (Contract): API responses match expected schemas
