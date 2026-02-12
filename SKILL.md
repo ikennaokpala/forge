@@ -67,7 +67,7 @@ Forge stores the discovered project map:
     "testDir": "integration_test/e2e/",
     "specDir": "integration_test/e2e/specs/"
   },
-  "contexts": ["identity", "rides", "payments", "..."],
+  "contexts": ["identity", "orders", "payments", "..."],
   "testDataSeeding": {
     "method": "api",
     "endpoint": "/api/v1/test/seed",
@@ -133,7 +133,7 @@ Mock **external** dependencies that are:
 ### What's NOT Allowed ❌
 
 NEVER mock **our own code**:
-- ❌ Our backend API (TripService, BookingService, ApiService, UserRepository)
+- ❌ Our backend API (UserService, OrderService, ApiService, UserRepository)
 - ❌ Our models/entities/value objects
 - ❌ Our repositories/providers/controllers
 - ❌ AI-generated code (anything we built)
@@ -163,16 +163,16 @@ NEVER mock **our own code**:
 
 **✅ GOOD: Mock External Service**
 ```dart
-// PaymentService test - mock Stripe (external)
+// Payment processing test - mock Stripe (external)
 final mockStripe = MockStripeClient(); // ✅ External API
-final service = PaymentService(stripe: mockStripe);
+final service = PaymentProcessor(stripe: mockStripe);
 when(mockStripe.createIntent(...)).thenReturn(intent);
 ```
 
 **❌ BAD: Mock Internal Service**
 ```dart
 // Controller test - mocking OUR service
-final mockBookingService = MockBookingService(); // ❌ OUR CODE!
+final mockOrderService = MockOrderService(); // ❌ OUR CODE!
 // This proves nothing about real integration
 ```
 
@@ -180,9 +180,9 @@ final mockBookingService = MockBookingService(); // ❌ OUR CODE!
 ```dart
 // Controller test - real service + in-memory DB
 final testDb = await createInMemoryDatabase();
-final repo = BookingRepository(db: testDb); // ✅ Real repo
-final service = BookingService(repo: repo); // ✅ Real service
-final controller = BookingController(service: service); // ✅ Real controller
+final repo = OrderRepository(db: testDb); // ✅ Real repo
+final service = OrderService(repo: repo); // ✅ Real service
+final controller = OrderController(service: service); // ✅ Real controller
 // This proves real integration works
 ```
 
@@ -1641,10 +1641,10 @@ contexts:
 
 dependencies:
   identity:
-    blocks: [rides, payments, driver]
+    blocks: [orders, billing, users]
   payments:
     depends_on: [identity]
-    blocks: [rides, subscriptions]
+    blocks: [orders, subscriptions]
 ```
 
 This separates the generic Forge engine from project-specific configuration, making Forge reusable across any codebase.
