@@ -117,23 +117,79 @@ dependencies:
 
 ---
 
-## CRITICAL: NO MOCKING OR STUBBING ALLOWED
+## CRITICAL: MOCKING/STUBBING POLICY
 
-**ABSOLUTE RULE: This skill NEVER uses mocking or stubbing of the backend API.**
+**CORE RULE: Mock ONLY external services and libraries. NEVER mock our internal code.**
 
-- ALL tests run against the REAL backend API
-- NO mocking frameworks for API calls (no `mockito`, `wiremock`, `MockClient`, `nock`, `msw`, `httpretty`, etc.)
-- NO stubbed responses or fake data from API endpoints
-- The backend MUST be running and healthy before any tests execute
-- Test data is seeded through REAL API calls, not mocked state
+### What's Allowed ✅
 
-**Why No Mocking:**
-- Mocks hide real integration bugs
-- Mocks create false confidence
-- Mocks don't test the actual data flow
-- Real API tests catch serialization, validation, and timing issues
+Mock **external** dependencies that are:
+- Out of our control (Stripe, Google Places, Plaid, Firebase, AWS, Twilio, SendGrid)
+- Third-party libraries (Dio, axios, fetch, HTTP clients)
+- System dependencies (file system, network, time, random)
+
+**Why**: External services are costly, rate-limited, slow, and may not have test environments.
+
+### What's NOT Allowed ❌
+
+NEVER mock **our own code**:
+- ❌ Our backend API (TripService, BookingService, ApiService, UserRepository)
+- ❌ Our models/entities/value objects
+- ❌ Our repositories/providers/controllers
+- ❌ AI-generated code (anything we built)
+
+**Why**: Mocking our own code hides integration bugs, creates false confidence, and doesn't test actual data flow.
+
+### Testing Strategy
+
+**Unit Tests**:
+- ✅ Mock external APIs (Stripe, Google Places)
+- ❌ Don't mock our services/repositories
+- Use real implementations with test data
+
+**Integration Tests**:
+- ✅ Mock external APIs (optional, for speed)
+- ❌ Don't mock our internal code
+- Use in-memory database (SQLite, embedded Redis)
+- Test real service → real repository → test database
+
+**E2E/BDD Tests**:
+- ✅ Mock external APIs (optional)
+- ❌ Don't mock anything internal
+- Backend MUST be running and healthy
+- Full stack: UI → API → Database
+
+### Examples
+
+**✅ GOOD: Mock External Service**
+```dart
+// PaymentService test - mock Stripe (external)
+final mockStripe = MockStripeClient(); // ✅ External API
+final service = PaymentService(stripe: mockStripe);
+when(mockStripe.createIntent(...)).thenReturn(intent);
+```
+
+**❌ BAD: Mock Internal Service**
+```dart
+// Controller test - mocking OUR service
+final mockBookingService = MockBookingService(); // ❌ OUR CODE!
+// This proves nothing about real integration
+```
+
+**✅ GOOD: Real Implementation**
+```dart
+// Controller test - real service + in-memory DB
+final testDb = await createInMemoryDatabase();
+final repo = BookingRepository(db: testDb); // ✅ Real repo
+final service = BookingService(repo: repo); // ✅ Real service
+final controller = BookingController(service: service); // ✅ Real controller
+// This proves real integration works
+```
+
+**Policy Details**: See [issue #24](https://github.com/ikennaokpala/forge/issues/24) for full documentation.
 
 ---
+
 
 ## PHASE 0: BACKEND SETUP (MANDATORY FIRST STEP)
 
@@ -500,7 +556,7 @@ Task({
     CONSTRAINTS:
     - NEVER skip failing tests
     - NEVER modify test code or source code
-    - NEVER mock API calls or stub responses
+    - NEVER mock internal code or stub our own APIs (external services OK)
     - NEVER continue if backend health check fails
 
     ACCEPTANCE:
@@ -1601,7 +1657,7 @@ Before running Forge:
 - [ ] Backend built and running
 - [ ] Health check passes
 - [ ] Test data seeded via real API calls
-- [ ] No mocking or stubbing in test code
+- [ ] No mocking of internal code (external services may be mocked)
 - [ ] Gherkin specs exist for target context (or will be generated)
 - [ ] All new screens/pages have test coverage
 - [ ] Edge cases documented and tested
