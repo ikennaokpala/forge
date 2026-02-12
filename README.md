@@ -20,7 +20,7 @@ Forge is an autonomous quality engineering swarm skill for [Claude Code](https:/
 - **Visual regression testing** with pixel-by-pixel comparison
 - **Architecture-agnostic** — monolith, microservices, monorepo, mobile+backend
 - **Optional Agentic QE integration** for enhanced pattern search, security scanning, and more
-- **No mocking** — all tests run against the real backend
+- **Mock external only, not our code** — tests run against real implementations with mocked external services ([#24](https://github.com/ikennaokpala/forge/issues/24))
 
 ---
 
