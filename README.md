@@ -2,7 +2,7 @@
 
 **Behavioral validation forged in, not bolted on.**
 
-Forge is an autonomous behavioral validation swarm skill for [Claude Code](https://claude.com/claude-code) that combines BDD behavioral verification, 7 behavioral validation gates, confidence-tiered learning, topological governance, and self-healing fix loops. It spawns 8 specialized agents that work in parallel to verify, test, fix, and commit — continuously — until every Gherkin scenario passes and every behavioral validation gate clears.
+Forge is an autonomous behavioral validation swarm skill for [Claude Code](https://claude.com/claude-code) that combines BDD behavioral verification, 7 behavioral validation gates, confidence-tiered learning, topological governance, and self-healing fix loops. It spawns 8 specialized agents that work in parallel to verify, test, fix, and commit - continuously - until every Gherkin scenario passes and every behavioral validation gate clears.
 
 ---
 
@@ -11,7 +11,7 @@ Forge is an autonomous behavioral validation swarm skill for [Claude Code](https
 - **8 specialized agents** working in parallel with cost-optimized model routing
 - **Gherkin behavioral specifications** as the single source of truth
 - **7 behavioral validation gates**: Functional, Behavioral, Coverage, Security, Accessibility, Resilience, Contract
-- **12 topological governance specifications** (§1.1–§1.12) — mathematical foundations for autonomous behavioral validation
+- **12 topological governance specifications** (§1.1–§1.12) - mathematical foundations for autonomous behavioral validation
 - **Confidence-tiered fix patterns** (Platinum/Gold/Silver/Bronze) with Nash Equilibrium convergence
 - **Defect prediction** based on historical failure data and file changes
 - **Chaos/resilience testing** with controlled failure injection
@@ -19,19 +19,19 @@ Forge is an autonomous behavioral validation swarm skill for [Claude Code](https
 - **Shared types and cross-cutting validation** across bounded contexts
 - **Agent-optimized ADRs** with MUST/MUST NOT constraints and verification commands
 - **Visual regression testing** with pixel-by-pixel comparison
-- **Architecture-agnostic** — monolith, microservices, monorepo, mobile+backend
+- **Architecture-agnostic** - monolith, microservices, monorepo, mobile+backend
 - **Optional Agentic QE integration** for enhanced pattern search, security scanning, and more
-- **External-only mocking** — mock third-party services, never internal code (production-validated policy)
-- **Spec drift detection** — detects when Gherkin specs and implementation diverge
-- **LLM-as-Judge meta-review** — second-model evaluation with Anti-Echo-Chamber guarantee
-- **Self-reflection gate** — Bug Fixer asks "What could go wrong?" before committing
-- **Hallucination Gate** — deterministic pre-LLM boundary (AST resolution, contract hash, mocking detection)
-- **Agent criticality scoring** — bottleneck detection via Dirichlet energy and automatic optimization
-- **Narya-proofs** — counterfactual verification proving fix necessity and sufficiency
-- **Property-based testing** — generate 1000+ test cases from invariants
-- **Mutation testing** — inject bugs to verify test effectiveness
-- **Blake3 witness chain** — cryptographic tamper-evident audit trail for gate verdicts
-- **Infrastructure readiness markers** — specify formally, implement pragmatically, upgrade transparently
+- **External-only mocking** - mock third-party services, never internal code (production-validated policy)
+- **Spec drift detection** - detects when Gherkin specs and implementation diverge
+- **LLM-as-Judge meta-review** - second-model evaluation with Anti-Echo-Chamber guarantee
+- **Self-reflection gate** - Bug Fixer asks "What could go wrong?" before committing
+- **Hallucination Gate** - deterministic pre-LLM boundary (AST resolution, contract hash, mocking detection)
+- **Agent criticality scoring** - bottleneck detection via Dirichlet energy and automatic optimization
+- **Narya-proofs** - counterfactual verification proving fix necessity and sufficiency
+- **Property-based testing** - generate 1000+ test cases from invariants
+- **Mutation testing** - inject bugs to verify test effectiveness
+- **Blake3 witness chain** - cryptographic tamper-evident audit trail for gate verdicts
+- **Infrastructure readiness markers** - specify formally, implement pragmatically, upgrade transparently
 
 ---
 
@@ -42,7 +42,7 @@ Forge is an autonomous behavioral validation swarm skill for [Claude Code](https
 | Pillar | Source | What It Does |
 |--------|--------|--------------|
 | **Build** | DDD+ADR+TDD methodology | Structured development with behavioral validation gates, defect prediction, confidence-tiered fixes |
-| **Verify** | BDD/Gherkin behavioral specs | Continuous behavioral verification — the PRODUCT works, not just the CODE |
+| **Verify** | BDD/Gherkin behavioral specs | Continuous behavioral verification - the PRODUCT works, not just the CODE |
 | **Heal** | Autonomous E2E fix loop | Test → Analyze → Fix → Commit → Learn → Repeat |
 
 ### "DONE DONE"
@@ -67,7 +67,7 @@ cp SKILL.md ~/.claude/skills/forge.md
 
 | Command | Description |
 |---------|-------------|
-| `/forge --autonomous --all` | Full autonomous run — all contexts, all gates |
+| `/forge --autonomous --all` | Full autonomous run - all contexts, all gates |
 | `/forge --autonomous --context [name]` | Single context autonomous run |
 | `/forge --verify-only` | Behavioral verification only (no fixes) |
 | `/forge --verify-only --context [name]` | Verify single context |
@@ -126,12 +126,12 @@ Specify → Test → Analyze → Fix → Audit → Gate → Commit → Learn →
 
 ### Execution Phases
 
-1. **Phase 0** — Backend setup (build, run, health check, seed data)
-2. **Phase 1** — Behavioral specification & architecture records (Gherkin specs, ADRs)
-3. **Phase 2** — Contract & dependency validation (schemas, shared types, cross-cutting)
-4. **Phase 3** — Swarm initialization (load patterns, predictions, confidence tiers)
-5. **Phase 4** — Spawn 8 autonomous agents in parallel
-6. **Phase 5** — Behavioral validation gates evaluation (7 gates after every fix cycle, BFT consensus ≥5/7)
+1. **Phase 0** - Backend setup (build, run, health check, seed data)
+2. **Phase 1** - Behavioral specification & architecture records (Gherkin specs, ADRs)
+3. **Phase 2** - Contract & dependency validation (schemas, shared types, cross-cutting)
+4. **Phase 3** - Swarm initialization (load patterns, predictions, confidence tiers)
+5. **Phase 4** - Spawn 8 autonomous agents in parallel
+6. **Phase 5** - Behavioral validation gates evaluation (7 gates after every fix cycle, BFT consensus ≥5/7)
 
 ---
 
@@ -153,20 +153,20 @@ Specify → Test → Analyze → Fix → Audit → Gate → Commit → Learn →
 
 | Agent | Model | Role | v1.2.0 Enhancement |
 |-------|-------|------|--------------------|
-| **Specification Verifier** | Sonnet | Generates/validates Gherkin specs and ADRs for bounded contexts | — |
-| **Test Runner** | Haiku | Executes E2E test suites, parses results, maps failures to specs | — |
-| **Failure Analyzer** | Sonnet | Root cause analysis, pattern matching, dependency impact assessment | MaTTS — 3 parallel reasoning trajectories with self-contrast |
+| **Specification Verifier** | Sonnet | Generates/validates Gherkin specs and ADRs for bounded contexts | - |
+| **Test Runner** | Haiku | Executes E2E test suites, parses results, maps failures to specs | - |
+| **Failure Analyzer** | Sonnet | Root cause analysis, pattern matching, dependency impact assessment | MaTTS - 3 parallel reasoning trajectories with self-contrast |
 | **Bug Fixer** | Opus | Applies confidence-tiered fixes from first principles | Driver-Observer algebraic connectivity (λ₂ monitoring) |
 | **Behavioral Validation Gate Enforcer** | Haiku | Evaluates all 7 gates, arbitrates agent disagreements | BFT consensus model (≥5/7 threshold, VETO for blocking gates) |
-| **Accessibility Auditor** | Sonnet | WCAG AA audit: labels, contrast, targets, focus order | — |
-| **Auto-Committer** | Haiku | Stages fixed files, creates detailed commits with gate statuses | — |
-| **Learning Optimizer** | Sonnet | Updates confidence tiers, defect prediction, coverage metrics | DISTILL phase — LoRA-style abstraction with EWC++ anti-forgetting |
+| **Accessibility Auditor** | Sonnet | WCAG AA audit: labels, contrast, targets, focus order | - |
+| **Auto-Committer** | Haiku | Stages fixed files, creates detailed commits with gate statuses | - |
+| **Learning Optimizer** | Sonnet | Updates confidence tiers, defect prediction, coverage metrics | DISTILL phase - LoRA-style abstraction with EWC++ anti-forgetting |
 
 ---
 
 ## Topological Governance (v1.2.0)
 
-Forge v1.2.0 introduces 12 formal topological governance specifications (§1.1–§1.12) that provide mathematical foundations for autonomous behavioral validation. Production heuristics from v1.1.0 — criticality scoring, regression tracking, blocking gates — are now anchored to formal mathematical equivalents.
+Forge v1.2.0 introduces 12 formal topological governance specifications (§1.1–§1.12) that provide mathematical foundations for autonomous behavioral validation. Production heuristics from v1.1.0 - criticality scoring, regression tracking, blocking gates - are now anchored to formal mathematical equivalents.
 
 ### Four Specification Clusters
 
@@ -195,7 +195,7 @@ Every specification is operational today. Infrastructure readiness markers defin
 ### Project Config (optional)
 
 ```yaml
-# forge.config.yaml — placed at repo root
+# forge.config.yaml - placed at repo root
 architecture: microservices
 backend:
   services:
@@ -231,7 +231,7 @@ integrations:
 ### Context Config (optional)
 
 ```yaml
-# forge.contexts.yaml — bounded context definitions
+# forge.contexts.yaml - bounded context definitions
 contexts:
   - name: identity
     testFile: identity.cy.ts
@@ -275,11 +275,11 @@ All AQE features are additive. Forge works identically without AQE installed.
 
 ## References
 
-- [Continuous Behavioral Verification: Ongoing Path to Done](https://www.linkedin.com/pulse/continuous-behavioral-verification-ongoing-path-done-ikenna-okpala) — Ikenna Okpala
-- [Build with Quality Skill: How I Build Software 10x Faster](https://www.linkedin.com/pulse/build-quality-skill-how-i-build-software-10x-faster-mondweep-chakravorty) — Mondweep Chakravorty
-- [claude-code-v3-qe-skill](https://github.com/mondweep/vibe-cast) — V3 QE Skill
-- [agentic-qe](https://github.com/proffesor-for-testing/agentic-qe) — Agentic QE Framework
-- Advanced Topological Governance in Autonomous Software Engineering — Formal mathematical foundations (sheaf theory, spectral analysis, Galois fields) for v1.2.0 specifications
+- [Continuous Behavioral Verification: Ongoing Path to Done](https://www.linkedin.com/pulse/continuous-behavioral-verification-ongoing-path-done-ikenna-okpala) - Ikenna Okpala
+- [Build with Quality Skill: How I Build Software 10x Faster](https://www.linkedin.com/pulse/build-quality-skill-how-i-build-software-10x-faster-mondweep-chakravorty) - Mondweep Chakravorty
+- [claude-code-v3-qe-skill](https://github.com/mondweep/vibe-cast) - V3 QE Skill
+- [agentic-qe](https://github.com/proffesor-for-testing/agentic-qe) - Agentic QE Framework
+- Advanced Topological Governance in Autonomous Software Engineering - Formal mathematical foundations (sheaf theory, spectral analysis, Galois fields) for v1.2.0 specifications
 
 ---
 

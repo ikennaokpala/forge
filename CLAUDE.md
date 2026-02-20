@@ -1,4 +1,4 @@
-# Forge — Project Instructions
+# Forge - Project Instructions
 
 ## Author Attribution
 

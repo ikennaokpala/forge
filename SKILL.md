@@ -1,9 +1,9 @@
 ---
 name: Forge
-description: Autonomous quality engineering swarm that forges production-ready code through continuous behavioral verification, exhaustive E2E testing, and self-healing fix loops. Combines DDD+ADR+TDD methodology with BDD/Gherkin specifications, 7 quality gates, defect prediction, chaos testing, and cross-context dependency awareness. Architecture-agnostic — works with monoliths, microservices, modular monoliths, and any bounded-context topology.
+description: Autonomous quality engineering swarm that forges production-ready code through continuous behavioral verification, exhaustive E2E testing, and self-healing fix loops. Combines DDD+ADR+TDD methodology with BDD/Gherkin specifications, 7 quality gates, defect prediction, chaos testing, and cross-context dependency awareness. Architecture-agnostic - works with monoliths, microservices, modular monoliths, and any bounded-context topology.
 ---
 
-# Forge — Autonomous Quality Engineering Swarm
+# Forge - Autonomous Quality Engineering Swarm
 
 **Quality forged in, not bolted on.**
 
@@ -12,7 +12,7 @@ Forge is a self-learning, autonomous quality engineering swarm that unifies thre
 | Pillar | Source | What It Does |
 |--------|--------|--------------|
 | **Build** | DDD+ADR+TDD methodology | Structured development with quality gates, defect prediction, confidence-tiered fixes |
-| **Verify** | BDD/Gherkin behavioral specs | Continuous behavioral verification — the PRODUCT works, not just the CODE |
+| **Verify** | BDD/Gherkin behavioral specs | Continuous behavioral verification - the PRODUCT works, not just the CODE |
 | **Heal** | Autonomous E2E fix loop | Test → Analyze → Fix → Commit → Learn → Repeat |
 
 **"DONE DONE"** means: the code compiles AND the product behaves as specified. Every Gherkin scenario passes. Every quality gate clears. Every dependency graph is satisfied.
@@ -21,44 +21,40 @@ Forge is a self-learning, autonomous quality engineering swarm that unifies thre
 
 ## TOPOLOGICAL GOVERNANCE FOUNDATIONS
 
-Forge's autonomous pipeline is governed by topological invariants from the theory of topological governance in autonomous software engineering. Each subsection defines a formal specification that agents MUST follow. For infrastructure-dependent computations (Blake3, HNSW, WASM), the specification is defined with a readiness marker — agents approximate the computation via structured reasoning until native runtime is available.
+Forge's autonomous pipeline is governed by topological invariants from the theory of topological governance in autonomous software engineering. Each subsection defines a formal specification that agents MUST follow. For infrastructure-dependent computations (Blake3, HNSW, WASM), the specification is defined with a readiness marker - agents approximate the computation via structured reasoning until native runtime is available.
 
 ### 1.1 Sheaf-Theoretic Consistency Model
 
-Bounded contexts form a topological space where each context U_i is an open set. Quality gates produce local sections s_i ∈ F(U_i) over each context. Global consistency is verified via sheaf cohomology:
+Bounded contexts form a topological space where each context $U_i$ is an open set. Quality gates produce local sections $s_i \in \mathcal{F}(U_i)$ over each context. Global consistency is verified via sheaf cohomology:
 
-- **H^0(F) = global sections** — Gate results that agree across all context overlaps. When H^0 is non-trivial, the swarm has achieved a globally consistent quality state.
-- **H^1(F) ≠ 0 = inter-context inconsistency** — A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally. **Action: If H^1(X; F) ≠ 0, REJECT the commit immediately. The codebase state cannot be glued consistently.**
+- **$H^0(\mathcal{F})$ = global sections** - Gate results that agree across all context overlaps. When $H^0$ is non-trivial, the swarm has achieved a globally consistent quality state.
+- **$H^1(\mathcal{F}) \neq 0$ = inter-context inconsistency** - A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally. **Action: If $H^1(X;\, \mathcal{F}) \neq 0$, REJECT the commit immediately. The codebase state cannot be glued consistently.**
 
-**Restriction maps:** For contexts U_i ⊇ U_j, the restriction ρ_{ij}: F(U_i) → F(U_j) is the projection of gate results onto the sub-context. Gate Enforcer verifies the cocycle condition: ρ_{ij} ∘ ρ_{jk} = ρ_{ik} on triple overlaps.
+**Restriction maps:** For contexts $U_i \supseteq U_j$, the restriction $\rho_{ij}: \mathcal{F}(U_i) \to \mathcal{F}(U_j)$ is the projection of gate results onto the sub-context. Gate Enforcer verifies the cocycle condition: $\rho_{ij} \circ \rho_{jk} = \rho_{ik}$ on triple overlaps.
 
-**Mathematical anchors** (Betti numbers): β_0 = number of connected components in the context dependency graph (should be 1 for a well-connected system). β_1 = number of independent cycles (each cycle is a potential inconsistency loop requiring explicit contract validation).
+**Mathematical anchors** (Betti numbers): $\beta_0$ = number of connected components in the context dependency graph (should be 1 for a well-connected system). $\beta_1$ = number of independent cycles (each cycle is a potential inconsistency loop requiring explicit contract validation).
 
 **Operational mapping:** Forge's cross-context dependency validation (Phase 2) and cascade re-testing IS the computation of restriction maps. Gate 7 (Contract) failures on shared types ARE non-zero H^1 elements.
 
 ### 1.2 Sheaf Laplacian & Dirichlet Energy
 
-The discrete Sheaf Laplacian L_F is defined on the context dependency graph G = (V, E) where V = bounded contexts and E = dependency edges:
+The discrete Sheaf Laplacian $L_{\mathcal{F}}$ is defined on the context dependency graph $G = (V, E)$ where V = bounded contexts and E = dependency edges:
 
-```
-L_F = D_F - A_F
-```
+$$L_{\mathcal{F}} = D_{\mathcal{F}} - A_{\mathcal{F}}$$
 
-where D_F is the degree matrix weighted by restriction map norms and A_F is the adjacency matrix weighted by inter-context agreement.
+where $D_{\mathcal{F}}$ is the degree matrix weighted by restriction map norms and $A_{\mathcal{F}}$ is the adjacency matrix weighted by inter-context agreement.
 
 **Dirichlet energy** quantifies total system tension:
 
-```
-E(S) = Σ_{(i,j) ∈ E} ||ρ_{ij}(s_i) - ρ_{ji}(s_j)||²
-```
+$$E(S) = \sum_{(i,j) \in E} \left\|\rho_{ij}(s_i) - \rho_{ji}(s_j)\right\|^2$$
 
-where s_i is context i's gate result vector and ρ_{ij} is the restriction map from context i to the shared boundary with context j.
+where $s_i$ is context i's gate result vector and $\rho_{ij}$ is the restriction map from context i to the shared boundary with context j.
 
-**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy — the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. The stability threshold is E(S) ≤ 0.7. If E(S) > 0.7, the Hallucination Gate MUST close. The agent's generation is blocked and a Blake3 witness is generated detailing the topological constraint violated.
+**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy - the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. The stability threshold is $E(S) \leq 0.7$. If $E(S) > 0.7$, the Hallucination Gate MUST close. The agent's generation is blocked and a Blake3 witness is generated detailing the topological constraint violated.
 
 ### 1.3 Persistent Sheaf Laplacian
 
-The commit history defines a filtration F_0 ⊂ F_1 ⊂ ... ⊂ F_n where each F_t is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
+The commit history defines a filtration $\mathcal{F}_0 \subset \mathcal{F}_1 \subset \cdots \subset \mathcal{F}_n$ where each $\mathcal{F}_t$ is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
 
 **Persistence barcodes** per Gherkin scenario:
 
@@ -68,19 +64,19 @@ The commit history defines a filtration F_0 ⊂ F_1 ⊂ ... ⊂ F_n where each F
 | **Short bar** (born and dies quickly) | Scenario flickers between pass/fail | **Flaky** (alternating pass/fail) |
 | **Died bar** (was alive, now dead) | Scenario was passing, now consistently fails | **Regressed** (was stable, now failing) |
 
-**Operational mapping:** Forge's behavioral regression tracking — storing the last 50 results per scenario with stability scores (Stable/Flaky/Regressed) — IS the persistence diagram. The `first_failure_commit` field marks the birth of a homological feature (a new failure mode). The `stability_score` is the bar length normalized to [0, 1].
+**Operational mapping:** Forge's behavioral regression tracking - storing the last 50 results per scenario with stability scores (Stable/Flaky/Regressed) - IS the persistence diagram. The `first_failure_commit` field marks the birth of a homological feature (a new failure mode). The `stability_score` is the bar length normalized to [0, 1].
 
-### 1.4 Hallucination Gate — Deterministic Binary Boundary
+### 1.4 Hallucination Gate - Deterministic Binary Boundary
 
 The Hallucination Gate is a 3-phase deterministic verification that runs BEFORE any LLM-as-Judge evaluation. It provides a binary PASS/FAIL boundary that cannot be fooled by probabilistic reasoning.
 
-**Phase 1 — AST Symbol Resolution:**
+**Phase 1 - AST Symbol Resolution:**
 Parse the fix diff's AST. Every referenced symbol (class, function, method, import, type) MUST resolve to an existing definition in the codebase or SDK. Unresolved symbols = immediate FAIL.
 
-**Phase 2 — Contract Hash Verification:**
+**Phase 2 - Contract Hash Verification:**
 Compute SHA-256 hash of the API specification (OpenAPI/schema) before and after the fix. If the fix claims to be non-breaking but the contract hash changed, FAIL. Contract mutations require explicit declaration.
 
-**Phase 3 — Internal Mocking Detection:**
+**Phase 3 - Internal Mocking Detection:**
 Regex scan for `@patch`, `mock`, `stub`, `fake`, `spy` targeting internal module paths. Any match = immediate FAIL. This is Gate 4's existing deterministic check, elevated to the Hallucination Gate.
 
 **Gate ordering:** Primary gate = Hallucination Gate (deterministic). Secondary gate = LLM-as-Judge (probabilistic). A fix MUST pass the deterministic gate before the probabilistic gate is consulted. This prevents the "circular validation trap" where an LLM evaluates another LLM's output.
@@ -104,37 +100,37 @@ Every gate verdict produces a cryptographic witness record forming an append-onl
 }
 ```
 
-The chain is append-only — no witness can be modified after creation. Each witness references the previous, forming a tamper-evident log. Any break in the chain (hash mismatch) invalidates all subsequent witnesses.
+The chain is append-only - no witness can be modified after creation. Each witness references the previous, forming a tamper-evident log. Any break in the chain (hash mismatch) invalidates all subsequent witnesses.
 
 **Infrastructure Dependency:** Blake3 hashing algorithm
-**Readiness:** SPECIFICATION — agents use SHA-256 for witness hashing; computation is approximated via structured reasoning until Blake3 native runtime is available.
+**Readiness:** SPECIFICATION - agents use SHA-256 for witness hashing; computation is approximated via structured reasoning until Blake3 native runtime is available.
 **Activation:** When Blake3 runtime is detected, agents switch from SHA-256 to Blake3 for witness hashing.
 
 Witness records are stored in the `forge-witnesses` memory namespace with key pattern `witness-[gate]-[timestamp]`.
 
 ### 1.6 Algebraic Connectivity & Spectral Analysis
 
-The agent collaboration graph G = (V, E) has 8 vertices (one per agent) and edges weighted by data flow volume between agents. The graph Laplacian L = D - A has eigenvalues 0 = λ_1 ≤ λ_2 ≤ ... ≤ λ_8.
+The agent collaboration graph $G = (V, E)$ has 8 vertices (one per agent) and edges weighted by data flow volume between agents. The graph Laplacian $L = D - A$ has eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_8$.
 
-**Fiedler value λ₂** = algebraic connectivity of the swarm:
+**Fiedler value $\lambda_2$** = algebraic connectivity of the swarm:
 
-**Hard requirement:** λ₂ MUST remain strictly > 0. A zero Fiedler value means the graph is disconnected — agents cannot coordinate.
+**Hard requirement:** $\lambda_2$ MUST remain strictly > 0. A zero Fiedler value means the graph is disconnected - agents cannot coordinate.
 
-| λ₂ Range | Classification | Action |
+| $\lambda_2$ Range | Classification | Action |
 |----------|---------------|--------|
-| λ₂ ≥ 0.5 | **Well-connected** | Swarm is healthy, agents communicate effectively |
-| 0.1 ≤ λ₂ < 0.5 | **Weakly connected** | Monitor for emerging fragmentation |
-| 0 < λ₂ < 0.1 | **Near-fragmentation** | Warning — strengthen inter-agent data flow |
-| λ₂ ≈ 0 | **SWARM_FRAGMENTATION** | Instant MinCut isolation + forced synchronization event — agents are disconnected |
+| $\lambda_2 \geq 0.5$ | **Well-connected** | Swarm is healthy, agents communicate effectively |
+| $0.1 \leq \lambda_2 < 0.5$ | **Weakly connected** | Monitor for emerging fragmentation |
+| $0 < \lambda_2 < 0.1$ | **Near-fragmentation** | Warning - strengthen inter-agent data flow |
+| $\lambda_2 \approx 0$ | **SWARM_FRAGMENTATION** | Instant MinCut isolation + forced synchronization event - agents are disconnected |
 
 **Spectral analysis procedure:**
 1. Construct adjacency matrix A from agent data flow (memory reads/writes between namespaces)
 2. Compute degree matrix D = diag(row sums of A)
-3. Compute Laplacian L = D - A
-4. Extract λ₂ (second-smallest eigenvalue)
-5. If λ₂ ≈ 0, execute MinCut isolation of disconnected subgraph + forced synchronization event. Emit SWARM_FRAGMENTATION alert to Learning Optimizer
+3. Compute Laplacian $L = D - A$
+4. Extract $\lambda_2$ (second-smallest eigenvalue)
+5. If $\lambda_2 \approx 0$, execute MinCut isolation of disconnected subgraph + forced synchronization event. Emit SWARM_FRAGMENTATION alert to Learning Optimizer
 
-**Operational mapping:** Forge's criticality scoring and bottleneck detection IS spectral analysis of the agent graph — bottleneck detection identifies agents with disproportionate blocking impact, which corresponds to vertices whose removal would disconnect the graph (low algebraic connectivity).
+**Operational mapping:** Forge's criticality scoring and bottleneck detection IS spectral analysis of the agent graph - bottleneck detection identifies agents with disproportionate blocking impact, which corresponds to vertices whose removal would disconnect the graph (low algebraic connectivity).
 
 ### 1.7 Dynamic MinCut Isolation
 
@@ -146,29 +142,27 @@ When an agent produces anomalous output (e.g., Bug Fixer generates a fix that fa
 3. Learning Optimizer demotes all patterns applied by the quarantined agent (-0.10 each)
 4. After root cause resolution, agent is un-quarantined and re-enters the pipeline
 
-**Operational mapping:** Forge's sequential pipeline topology naturally provides MinCut = 1 per agent — each agent can be isolated by severing its single output edge. The blocking gate architecture (Gate Enforcer blocks Auto-Committer) IS a MinCut isolation boundary.
+**Operational mapping:** Forge's sequential pipeline topology naturally provides MinCut = 1 per agent - each agent can be isolated by severing its single output edge. The blocking gate architecture (Gate Enforcer blocks Auto-Committer) IS a MinCut isolation boundary.
 
 ### 1.8 Hyperbolic Memory Architecture
 
-Agent knowledge is embedded in the Poincaré ball model B^d = {x ∈ ℝ^d : ||x|| < 1} where hierarchical code relationships are preserved by hyperbolic distance:
+Agent knowledge is embedded in the Poincaré ball model $\mathbb{B}^d = \{x \in \mathbb{R}^d : \|x\| < 1\}$ where hierarchical code relationships are preserved by hyperbolic distance:
 
-```
-d_H(u, v) = arcosh(1 + 2||u - v||² / ((1 - ||u||²)(1 - ||v||²)))
-```
+$$d_H(u, v) = \operatorname{arcosh}\!\left(1 + \frac{2\|u - v\|^2}{(1 - \|u\|^2)(1 - \|v\|^2)}\right)$$
 
 This metric naturally represents code taxonomy: packages near the origin are high-level abstractions; leaves near the boundary are concrete implementations. Parent-child distances are short; cross-branch distances are exponentially large.
 
-**HNSW (Hierarchical Navigable Small World) index** over Poincaré embeddings enables O(log n) similarity search across the knowledge base — finding the most relevant fix pattern for a novel failure in sub-millisecond time.
+**HNSW (Hierarchical Navigable Small World) index** over Poincaré embeddings enables $O(\log n)$ similarity search across the knowledge base - finding the most relevant fix pattern for a novel failure in sub-millisecond time.
 
 **Infrastructure Dependency:** Vector database with hyperbolic distance metric + HNSW index
-**Readiness:** SPECIFICATION — agents follow the hierarchical namespace structure; retrieval is approximated via key-based lookups across 10 namespaces until native vector DB is available.
+**Readiness:** SPECIFICATION - agents follow the hierarchical namespace structure; retrieval is approximated via key-based lookups across 10 namespaces until native vector DB is available.
 **Activation:** When HNSW-capable vector DB is detected (or AQE ReasoningBank is available), agents switch from key-based to vector-similarity retrieval.
 
-**Operational mapping:** Forge's 10 memory namespaces (forge-patterns, forge-results, forge-state, forge-commits, forge-screens, forge-specs, forge-contracts, forge-predictions, forge-criticality, forge-witnesses) ARE a flat approximation of the Poincaré ball — each namespace represents a region of the knowledge space. The Intelligence Plane is realized when these namespaces are backed by hyperbolic embeddings.
+**Operational mapping:** Forge's 10 memory namespaces (forge-patterns, forge-results, forge-state, forge-commits, forge-screens, forge-specs, forge-contracts, forge-predictions, forge-criticality, forge-witnesses) ARE a flat approximation of the Poincaré ball - each namespace represents a region of the knowledge space. The Intelligence Plane is realized when these namespaces are backed by hyperbolic embeddings.
 
 ### 1.9 GF(3) Triadic Validation
 
-Pipeline phase transitions are governed by Galois field GF(3) = {-1, 0, +1} trit values where:
+Pipeline phase transitions are governed by Galois field $\mathrm{GF}(3) = \{-1,\, 0,\, +1\}$ trit values where:
 
 | GF(3) Trit | Role | Meaning |
 |------------|------|---------|
@@ -191,9 +185,9 @@ Pipeline phase transitions are governed by Galois field GF(3) = {-1, 0, +1} trit
 | Commit | 6 | Learn |
 | Learn | 7 | Next iteration |
 
-**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped — each phase's output is the next phase's input. The Generator→Coordinator→Validator triad maps directly to Forge's Bug Fixer(-1)→Gate Enforcer(0)→Test Runner(+1) cycle: -1 + 0 + 1 = 0 (mod 3).
+**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped - each phase's output is the next phase's input. The Generator→Coordinator→Validator triad maps directly to Forge's Bug Fixer(-1)→Gate Enforcer(0)→Test Runner(+1) cycle: $-1 + 0 + 1 \equiv 0 \pmod{3}$.
 
-### 1.10 Narya-Proofs — Counterfactual Verification
+### 1.10 Narya-Proofs - Counterfactual Verification
 
 Every Bug Fixer fix generates a Narya-proof: a bidirectional type-checking artifact that proves the fix is both necessary and sufficient.
 
@@ -206,35 +200,33 @@ Every Bug Fixer fix generates a Narya-proof: a bidirectional type-checking artif
 | Forward | Backward | Verdict | Interpretation |
 |---------|----------|---------|---------------|
 | PASS | FAIL | **VALID** | Fix is necessary and sufficient |
-| PASS | PASS | **COINCIDENTAL** | Fix is not the actual cause — tests pass without it |
+| PASS | PASS | **COINCIDENTAL** | Fix is not the actual cause - tests pass without it |
 | FAIL | FAIL | **INSUFFICIENT** | Fix does not resolve the failure |
-| FAIL | PASS | **IMPOSSIBLE** | Logical contradiction — investigate test flakiness |
+| FAIL | PASS | **IMPOSSIBLE** | Logical contradiction - investigate test flakiness |
 
 **Infrastructure Dependency:** Automated bidirectional test execution with git stash/unstash
-**Readiness:** SPECIFICATION — agents follow the forward+backward verification protocol; full automation requires git-level rollback integration.
+**Readiness:** SPECIFICATION - agents follow the forward+backward verification protocol; full automation requires git-level rollback integration.
 **Activation:** When forge-witnesses namespace is active, Narya-proofs are stored as `narya-[fix-hash]` entries.
 
-**Operational mapping:** Bug Fixer's "targeted test re-run after fix" IS the forward type-check. The backward type-check is the new formal requirement — it ensures fixes are not coincidental.
+**Operational mapping:** Bug Fixer's "targeted test re-run after fix" IS the forward type-check. The backward type-check is the new formal requirement - it ensures fixes are not coincidental.
 
 ### 1.11 Sublinear Coverage via Johnson-Lindenstrauss
 
-For large test suites (n > 1000 tests), the Johnson-Lindenstrauss lemma guarantees that random projection from n dimensions to O(log n) dimensions preserves pairwise distances within (1 ± ε) factor.
+For large test suites (n > 1000 tests), the Johnson-Lindenstrauss lemma guarantees that random projection from n dimensions to $O(\log n)$ dimensions preserves pairwise distances within $(1 \pm \varepsilon)$ factor.
 
-**Application:** Project n test cases onto O(log n) representative dimensions. Each dimension corresponds to a topological feature of the codebase (a module boundary, an API endpoint, a state machine transition). The representative subset covers the same topological features as the full suite with high probability.
+**Application:** Project n test cases onto $O(\log n)$ representative dimensions. Each dimension corresponds to a topological feature of the codebase (a module boundary, an API endpoint, a state machine transition). The representative subset covers the same topological features as the full suite with high probability.
 
 **Projection:**
 
-```
-representative_count = O(log(n) / ε²)
-```
+$$\text{representative\_count} = O\!\left(\frac{\log n}{\varepsilon^2}\right)$$
 
-For n = 1000 tests and ε = 0.1: representative_count ≈ 70 tests (93% reduction).
+For n = 1000 tests and $\varepsilon = 0.1$: representative_count ≈ 70 tests (93% reduction).
 
 **Infrastructure Dependency:** Johnson-Lindenstrauss random projection matrix
-**Readiness:** SPECIFICATION — agents use defect prediction to prioritize tests (greedy approximation of JL projection); full JL computation requires matrix operations.
+**Readiness:** SPECIFICATION - agents use defect prediction to prioritize tests (greedy approximation of JL projection); full JL computation requires matrix operations.
 **Activation:** When WASM runtime is available, agents compute exact JL projections for test selection.
 
-**Operational mapping:** Forge's defect prediction ordering (predicted-to-fail first) IS a greedy approximation of JL projection — it selects the tests most likely to cover novel failure modes, achieving sublinear convergence without computing the full projection matrix.
+**Operational mapping:** Forge's defect prediction ordering (predicted-to-fail first) IS a greedy approximation of JL projection - it selects the tests most likely to cover novel failure modes, achieving sublinear convergence without computing the full projection matrix.
 
 ### 1.12 WASM/Rust Execution Plane
 
@@ -243,14 +235,14 @@ Deterministic verification tasks are specified as pure functions suitable for WA
 | Task | Input | Output | Pure |
 |------|-------|--------|------|
 | Blake3 witness hashing | byte[] | hash | Yes |
-| Eigenvalue computation (λ₂) | adjacency matrix | float | Yes |
+| Eigenvalue computation ($\lambda_2$) | adjacency matrix | float | Yes |
 | GF(3) phase validation | phase states | valid/invalid | Yes |
 | HNSW nearest-neighbor | query vector, index | top-k results | Yes |
 | Contract hash comparison | spec_before, spec_after | same/changed | Yes |
 | JL random projection | test matrix, target dim | projected matrix | Yes |
 
 **Infrastructure Dependency:** WASM runtime (e.g., Wasmtime, Wasmer) with Rust toolchain
-**Readiness:** SPECIFICATION — all tasks are defined as pure functions; agents execute equivalent logic via structured reasoning until WASM runtime is available.
+**Readiness:** SPECIFICATION - all tasks are defined as pure functions; agents execute equivalent logic via structured reasoning until WASM runtime is available.
 **Activation:** When WASM runtime is detected, deterministic tasks are offloaded from LLM reasoning to compiled execution for guaranteed correctness and sub-millisecond latency.
 
 ---
@@ -317,7 +309,7 @@ Forge stores the discovered project map:
 Projects can provide a `forge.config.yaml` at the repo root to override auto-discovery:
 
 ```yaml
-# forge.config.yaml (optional — Forge auto-discovers if absent)
+# forge.config.yaml (optional - Forge auto-discovers if absent)
 architecture: microservices
 backend:
   services:
@@ -361,7 +353,7 @@ All tests run against the REAL backend API. Internal services, repositories, con
 
 **Production Evidence:** In production orchestra runs, 5/5 PR failures (100%) were traced to internal mocking violations. 5/5 PR successes (100%) used real implementations. (See Issues #24, #25)
 
-### Allowed — External Services Only
+### Allowed - External Services Only
 
 These are outside your system boundary and may be mocked:
 
@@ -372,7 +364,7 @@ These are outside your system boundary and may be mocked:
 - **HTTP clients:** Dio, Axios, fetch (when calling external URLs)
 - **Infrastructure:** File system, network layer, system clock
 
-### Forbidden — Internal Code (NEVER Mock)
+### Forbidden - Internal Code (NEVER Mock)
 
 These are inside your system and must use real implementations:
 
@@ -400,7 +392,7 @@ async def test_payment_flow(mock_stripe):
     response = await client.post("/api/v1/payments", json=payment_data)
     assert response.status_code == 201  # Real service, real DB, mocked Stripe
 
-# BAD: Mock internal OrderService — NEVER DO THIS
+# BAD: Mock internal OrderService - NEVER DO THIS
 @patch("src.services.order_service.OrderService.create_order")  # ❌ VIOLATION
 async def test_checkout(mock_order):
     mock_order.return_value = Order(id=1)  # Hides real integration bugs
@@ -416,8 +408,8 @@ async def test_checkout():
 
 ### Enforcement
 
-- **Coverage Validator:** Scans test files for internal mocking patterns — flags as CRITICAL violation
-- **Gate 4 (Security):** Includes internal mocking check — BLOCKS commit if detected
+- **Coverage Validator:** Scans test files for internal mocking patterns - flags as CRITICAL violation
+- **Gate 4 (Security):** Includes internal mocking check - BLOCKS commit if detected
 - **Auto-Committer:** Refuses to commit code containing internal mock patterns
 - **Pattern:** Any `@patch`, `mock`, `stub`, `fake`, `spy` targeting internal module paths triggers a BLOCK
 
@@ -425,17 +417,17 @@ async def test_checkout():
 
 ## MANDATORY: PLAN BEFORE EXECUTE
 
-**Every Forge invocation MUST call `EnterPlanMode` before executing any tasks — no exceptions.**
+**Every Forge invocation MUST call `EnterPlanMode` before executing any tasks - no exceptions.**
 
 Before any phase begins, Forge enters planning mode to establish:
 
-1. **Task breakdown** — discrete units of work derived from the target context
-2. **Scope boundaries** — what is in-scope vs. out-of-scope for this run
-3. **Success criteria** — measurable outcomes mapped to the 7 quality gates
-4. **Dependencies** — backend readiness, test data, external service stubs
-5. **Strategy** — execution order, model routing, and iteration budget
+1. **Task breakdown** - discrete units of work derived from the target context
+2. **Scope boundaries** - what is in-scope vs. out-of-scope for this run
+3. **Success criteria** - measurable outcomes mapped to the 7 quality gates
+4. **Dependencies** - backend readiness, test data, external service stubs
+5. **Strategy** - execution order, model routing, and iteration budget
 
-**No task execution begins without an approved plan.** This applies to all invocation modes: full swarm, single-gate re-runs, and targeted fixes. The plan is the contract between Forge and the developer — it ensures alignment before autonomous work starts.
+**No task execution begins without an approved plan.** This applies to all invocation modes: full swarm, single-gate re-runs, and targeted fixes. The plan is the contract between Forge and the developer - it ensures alignment before autonomous work starts.
 
 ---
 
@@ -444,7 +436,7 @@ Before any phase begins, Forge enters planning mode to establish:
 
 **BEFORE ANY TESTING, the backend MUST be built, compiled, and running.**
 
-This is the FIRST thing the skill does — no exceptions.
+This is the FIRST thing the skill does - no exceptions.
 
 ### Step 1: Check and Start Backend
 
@@ -507,7 +499,7 @@ npx @claude-flow/cli@latest memory store \
 ### Step 4: Seed Test Data (Real API Calls)
 
 ```bash
-# Seed test data through REAL API — adapt to your project's seeding endpoint
+# Seed test data through REAL API - adapt to your project's seeding endpoint
 curl -X POST http://localhost:${BACKEND_PORT}/${SEED_ENDPOINT} \
   -H "Content-Type: application/json" \
   -H "${TEST_AUTH_HEADER}" \
@@ -567,14 +559,14 @@ If specs are missing for a target context, the Specification Verifier agent crea
 
 Gherkin specs are the behavioral contract. When specs and implementation diverge, the product is broken regardless of whether tests pass. Forge detects three types of drift:
 
-**1. Static Drift — Code paths without matching specs**
+**1. Static Drift - Code paths without matching specs**
 
 Parse Gherkin Given/When/Then steps and verify matching code paths exist in the implementation. Flag:
 - Implementation paths with no corresponding scenario (untested behavior)
 - Scenarios referencing code paths that no longer exist (stale specs)
 - New API endpoints with no behavioral specification
 
-**2. Contract Drift — API specs vs live responses**
+**2. Contract Drift - API specs vs live responses**
 
 Compare API contracts defined in Gherkin scenarios against actual API responses:
 - Expected response fields vs actual response fields
@@ -664,11 +656,11 @@ Contract violations are treated as Gate 7 failures and must be resolved before f
 
 For bounded contexts that share dependencies, validate type consistency across context boundaries:
 
-1. **Identify shared DTOs/models** — For each context, extract types used in API requests and responses
-2. **Cross-reference types** — Compare DTOs between contexts that share dependencies (from the dependency graph)
-3. **Flag type mismatches** — e.g., context A expects `userId: string` but context B sends `userId: number`
-4. **Validate value objects** — Ensure value objects (email, money, address) follow consistent patterns across contexts
-5. **Report violations** — Flag as pre-Gate warnings with specific file locations and expected vs actual types
+1. **Identify shared DTOs/models** - For each context, extract types used in API requests and responses
+2. **Cross-reference types** - Compare DTOs between contexts that share dependencies (from the dependency graph)
+3. **Flag type mismatches** - e.g., context A expects `userId: string` but context B sends `userId: number`
+4. **Validate value objects** - Ensure value objects (email, money, address) follow consistent patterns across contexts
+5. **Report violations** - Flag as pre-Gate warnings with specific file locations and expected vs actual types
 
 ```json
 {
@@ -685,10 +677,10 @@ For bounded contexts that share dependencies, validate type consistency across c
 
 Verify cross-cutting concerns are consistent across all bounded contexts:
 
-- **Auth patterns** — Same header format (`Authorization: Bearer <token>`), same token validation approach across all endpoints
-- **Error response format** — All API endpoints return errors in the project's standard format (consistent structure, error codes, HTTP status codes)
-- **Logging patterns** — Consistent log levels, structured format, and correlation IDs across contexts
-- **Pagination format** — Consistent pagination parameters and response format across collection endpoints
+- **Auth patterns** - Same header format (`Authorization: Bearer <token>`), same token validation approach across all endpoints
+- **Error response format** - All API endpoints return errors in the project's standard format (consistent structure, error codes, HTTP status codes)
+- **Logging patterns** - Consistent log levels, structured format, and correlation IDs across contexts
+- **Pagination format** - Consistent pagination parameters and response format across collection endpoints
 
 Cross-cutting violations are reported as warnings before Gate evaluation begins.
 
@@ -697,7 +689,7 @@ Cross-cutting violations are reported as warnings before Gate evaluation begins.
 Bounded contexts have dependencies. When a fix touches context X, all contexts that depend on X must be re-tested.
 
 ```yaml
-# Context Dependency Map — define in forge.config.yaml or auto-discover
+# Context Dependency Map - define in forge.config.yaml or auto-discover
 # Example for a typical application:
 #
 # authentication:
@@ -751,19 +743,19 @@ Forge routes each agent to the appropriate model tier based on task complexity, 
 
 | Agent | Model | Rationale |
 |-------|-------|-----------|
-| Specification Verifier | `sonnet` | Reads code + generates Gherkin — moderate reasoning |
-| Test Runner | `haiku` | Structured execution, output parsing — low reasoning |
-| Failure Analyzer | `sonnet` | Root cause analysis — moderate reasoning |
-| Bug Fixer | `opus` | First-principles code fixes — high reasoning |
-| Quality Gate Enforcer | `haiku` | Threshold comparison — low reasoning |
-| Accessibility Auditor | `sonnet` | Code analysis + WCAG rules — moderate reasoning |
-| Auto-Committer | `haiku` | Git operations, message formatting — low reasoning |
-| Learning Optimizer | `sonnet` | Pattern analysis, prediction — moderate reasoning |
+| Specification Verifier | `sonnet` | Reads code + generates Gherkin - moderate reasoning |
+| Test Runner | `haiku` | Structured execution, output parsing - low reasoning |
+| Failure Analyzer | `sonnet` | Root cause analysis - moderate reasoning |
+| Bug Fixer | `opus` | First-principles code fixes - high reasoning |
+| Quality Gate Enforcer | `haiku` | Threshold comparison - low reasoning |
+| Accessibility Auditor | `sonnet` | Code analysis + WCAG rules - moderate reasoning |
+| Auto-Committer | `haiku` | Git operations, message formatting - low reasoning |
+| Learning Optimizer | `sonnet` | Pattern analysis, prediction - moderate reasoning |
 
 Projects can override model assignments in `forge.config.yaml`:
 
 ```yaml
-# forge.config.yaml — Model routing overrides (optional)
+# forge.config.yaml - Model routing overrides (optional)
 model_routing:
   spec-verifier: sonnet
   test-runner: haiku
@@ -783,14 +775,14 @@ The static agent-to-model mapping above serves as the default. At runtime, Coher
 
 | Lane | Energy Range | Processing | Latency | Description |
 |------|-------------|------------|---------|-------------|
-| **Reflex** | E < 0.1 | WASM engine / ruleset | < 1ms | Zero LLM calls — deterministic checks (threshold comparisons, hash validations, format checks) |
-| **Retrieval** | 0.1 ≤ E < 0.4 | Haiku-tier + RAG | ~10ms | Pattern-matched responses with retrieval-augmented context from forge-patterns |
-| **Heavy** | 0.4 ≤ E < 0.7 | Opus-tier deep analysis | ~100ms | First-principles reasoning for novel failures and complex fixes |
-| **Escalation** | E ≥ 0.7 | Pause swarm | Human review | Dirichlet energy exceeds stability threshold — swarm pauses and escalates to human |
+| **Reflex** | $E < 0.1$ | WASM engine / ruleset | < 1ms | Zero LLM calls - deterministic checks (threshold comparisons, hash validations, format checks) |
+| **Retrieval** | $0.1 \leq E < 0.4$ | Haiku-tier + RAG | ~10ms | Pattern-matched responses with retrieval-augmented context from forge-patterns |
+| **Heavy** | $0.4 \leq E < 0.7$ | Opus-tier deep analysis | ~100ms | First-principles reasoning for novel failures and complex fixes |
+| **Escalation** | $E \geq 0.7$ | Pause swarm | Human review | Dirichlet energy exceeds stability threshold - swarm pauses and escalates to human |
 
 **How it works:** The existing UpgradeModel/DowngradeModel recommendations in criticality scoring already approximate energy-based routing. This formalizes those heuristics: when criticality is low (E < 0.1), skip the LLM entirely; when criticality exceeds the Dirichlet stability threshold (E ≥ 0.7), stop autonomous operation.
 
-**Lane selection rule:** For each agent task, compute Coherence Energy E from the criticality score. The lane determines the model tier regardless of the agent's static default — a Gate Enforcer task that normally runs on haiku will escalate to opus if E ∈ [0.4, 0.7), or pause the swarm entirely if E ≥ 0.7.
+**Lane selection rule:** For each agent task, compute Coherence Energy E from the criticality score. The lane determines the model tier regardless of the agent's static default - a Gate Enforcer task that normally runs on haiku will escalate to opus if $E \in [0.4, 0.7)$, or pause the swarm entirely if $E \geq 0.7$.
 
 ---
 
@@ -831,7 +823,7 @@ Task({
     - NEVER generate specs for code you haven't read
     - NEVER assume UI elements exist without checking implementation
     - NEVER create scenarios that duplicate existing coverage
-    - NEVER modify existing test files — only spec files
+    - NEVER modify existing test files - only spec files
 
     ACCEPTANCE:
     - Every implementation file has at least one Gherkin scenario
@@ -873,7 +865,7 @@ Task({
 
     ACCEPTANCE:
     - All test results stored in memory with structured format
-    - Zero unparsed failures — every failure has testId, error, stackTrace, file, line
+    - Zero unparsed failures - every failure has testId, error, stackTrace, file, line
     - Predicted-to-fail tests executed first
     - Results include Gherkin scenario mapping for every test`,
   subagent_type: "tester",
@@ -904,7 +896,7 @@ Task({
     6. If no matching pattern:
        - Perform root cause analysis from first principles
        - Generate fix hypothesis
-    6.5. MaTTS (Memory-Aware Test-Time Scaling) — For failures with no matching pattern:
+    6.5. MaTTS (Memory-Aware Test-Time Scaling) - For failures with no matching pattern:
        Generate 3 parallel reasoning trajectories:
        a) FORWARD: Trace execution from input → failure point. What state diverged?
        b) BACKWARD: Start from the assertion failure → trace back to the divergence point
@@ -912,7 +904,7 @@ Task({
        Self-contrast analysis: Compare all 3 trajectories. Where do they agree = high-confidence
        root cause. Where they diverge = investigate further. If all 3 agree on a root cause,
        promote the analysis confidence by +0.10.
-       This implements MaTTS parallel trajectory generation with self-contrast — memory-aware
+       This implements MaTTS parallel trajectory generation with self-contrast - memory-aware
        because each trajectory queries forge-patterns for historical context.
     7. Store analysis in memory for Bug Fixer:
        npx @claude-flow/cli@latest memory store \
@@ -978,7 +970,7 @@ Task({
        - Check dependency graph for cascade impacts
        - Flag dependent contexts for re-testing
 
-    3.5. SELF-REFLECTION GATE — Before storing the fix, ask "What could go wrong?":
+    3.5. SELF-REFLECTION GATE - Before storing the fix, ask "What could go wrong?":
        Evaluate across 5 dimensions:
        a) COMPLETENESS: Are there TODOs, placeholders, or stub implementations?
        b) ERROR HANDLING: Are all async operations wrapped in try-catch? Are API
@@ -989,26 +981,26 @@ Task({
           names consistent between frontend and backend?
        e) EXISTENCE CHECK: Does every widget, class, function, and import I used
           actually exist in the SDK/framework? (Production evidence: non-existent
-          RadioGroup<T> widget crashed 3 core features — Issue #21)
+          RadioGroup<T> widget crashed 3 core features - Issue #21)
 
        If ANY dimension fails:
        - Fix the issue before proceeding
        - Re-run the targeted test to verify
        - Log the self-reflection finding for Learning Optimizer
 
-       "Compilation does not equal Correctness." — validate existence and behavior.
+       "Compilation does not equal Correctness." - validate existence and behavior.
 
     3.6. DRIVER-OBSERVER ALGEBRAIC CONNECTIVITY:
        Bug Fixer (opus) is the Driver; LLM-as-Judge (sonnet) is the Observer.
        Track pair connectivity: λ₂(pair) = submissions_accepted / total_submissions.
-       - λ₂(pair) ≥ 0.5: Healthy collaboration — Driver and Observer agree frequently
-       - λ₂(pair) < 0.5: Divergence — Observer is rejecting too many fixes
+       - λ₂(pair) ≥ 0.5: Healthy collaboration - Driver and Observer agree frequently
+       - λ₂(pair) < 0.5: Divergence - Observer is rejecting too many fixes
        - If Observer rejects 3+ consecutive submissions:
          → Emit DECOUPLE_ALERT
          → Request fresh root-cause analysis from Failure Analyzer
          → Reset the fix approach from first principles (do not retry same strategy)
        This prevents the Driver from fixating on a failing approach while the Observer
-       repeatedly flags the same issue — a form of pair-programming deadlock.
+       repeatedly flags the same issue - a form of pair-programming deadlock.
 
     4. Store the fix pattern with initial confidence:
        npx @claude-flow/cli@latest memory store \
@@ -1042,20 +1034,20 @@ Task({
 
     After each fix cycle, evaluate ALL 7 quality gates:
 
-    GATE 1 — FUNCTIONAL (100% required):
+    GATE 1 - FUNCTIONAL (100% required):
     - All tests in the target context pass
     - No regressions in previously passing tests
 
-    GATE 2 — BEHAVIORAL (100% of targeted scenarios):
+    GATE 2 - BEHAVIORAL (100% of targeted scenarios):
     - Every Gherkin scenario that was targeted has a passing test
     - Spec-to-test mapping is complete (no unmapped scenarios)
 
-    GATE 3 — COVERAGE (>=85% overall, >=95% critical paths):
+    GATE 3 - COVERAGE (>=85% overall, >=95% critical paths):
     - Calculate path coverage for the context
     - Critical paths: authentication, payment, core workflows
     - Non-critical paths: preferences, history, settings
 
-    GATE 4 — SECURITY (0 critical/high violations):
+    GATE 4 - SECURITY (0 critical/high violations):
     - No hardcoded API keys, tokens, or secrets in test files
     - No hardcoded test credentials (use env vars or test fixtures)
     - Secure storage patterns used (no plaintext sensitive data)
@@ -1063,22 +1055,22 @@ Task({
     - No XSS vectors in rendered output
     - No path traversal in file operations
     - Dependencies have no known critical CVEs (when lockfile available)
-    - No internal mocking violations (@patch/@mock targeting internal modules — BLOCKS commit)
+    - No internal mocking violations (@patch/@mock targeting internal modules - BLOCKS commit)
     - When AQE available: delegate to security-scanner for full SAST analysis
 
-    GATE 5 — ACCESSIBILITY (WCAG AA):
+    GATE 5 - ACCESSIBILITY (WCAG AA):
     - All interactive elements have accessible labels
     - Touch/click targets meet minimum size requirements
     - Color contrast meets WCAG AA ratios
     - Screen reader navigation order is logical
 
-    GATE 6 — RESILIENCE (tested for target context):
+    GATE 6 - RESILIENCE (tested for target context):
     - Offline/disconnected state handled gracefully
     - Timeout handling shows user-friendly message
     - Error states show retry option
     - Server errors show generic error, not stack trace
 
-    GATE 7 — CONTRACT (0 mismatches):
+    GATE 7 - CONTRACT (0 mismatches):
     - API responses match expected schemas
     - No unexpected null fields
     - Enum values match expected set
@@ -1100,18 +1092,18 @@ Task({
     BFT CONSENSUS MODEL:
     The 7 gates operate as Byzantine Fault Tolerant validators:
     - Consensus threshold: ≥5/7 gates must PASS for a non-blocking consensus
-    - Blocking gates (1-Functional, 2-Behavioral, 4-Security, 7-Contract) retain VETO power —
+    - Blocking gates (1-Functional, 2-Behavioral, 4-Security, 7-Contract) retain VETO power -
       a single blocking gate FAIL overrides BFT consensus
-    - Non-blocking gates (3-Coverage, 5-Accessibility, 6-Resilience) participate in BFT consensus —
+    - Non-blocking gates (3-Coverage, 5-Accessibility, 6-Resilience) participate in BFT consensus -
       they contribute warnings but cannot unilaterally block
     - CRDT counters: each gate maintains a grow-only PASS/FAIL counter across iterations.
-      Counters are monotonically increasing (append-only) — they cannot be decremented or reset.
+      Counters are monotonically increasing (append-only) - they cannot be decremented or reset.
       This ensures gate history is tamper-evident across the autonomous loop.
 
     CONSTRAINTS:
     - NEVER approve a commit with ANY blocking gate failure
     - NEVER lower thresholds below defined minimums
-    - NEVER skip gate evaluation — all 7 gates must be assessed
+    - NEVER skip gate evaluation - all 7 gates must be assessed
     - NEVER mark a gate as PASS without evidence
 
     ACCEPTANCE:
@@ -1167,7 +1159,7 @@ Task({
     - NEVER skip interactive elements during audit
     - NEVER report false positives for decorative images
     - NEVER ignore focus/tab order analysis
-    - NEVER apply fixes — only report findings for Bug Fixer
+    - NEVER apply fixes - only report findings for Bug Fixer
 
     ACCEPTANCE:
     - Every interactive element audited
@@ -1229,7 +1221,7 @@ Task({
     - NEVER use git add -A or git add .
     - NEVER commit without all 7 gates passing
     - NEVER amend previous commits
-    - NEVER push to remote — only local commits
+    - NEVER push to remote - only local commits
 
     ACCEPTANCE:
     - Commit message includes Behavioral Spec, Root Cause, Fix Applied, all 7 gate statuses
@@ -1288,11 +1280,11 @@ Task({
 
     6. Generate recommendations for test improvements
 
-    6.5. DISTILL — Complete the ReasoningBank cycle (RETRIEVE/JUDGE/DISTILL/CONSOLIDATE):
+    6.5. DISTILL - Complete the ReasoningBank cycle (RETRIEVE/JUDGE/DISTILL/CONSOLIDATE):
        For fix patterns with ≥10 successful applications:
        a) Extract the common structure across all successful instances
        b) Generalize: replace context-specific values with pattern variables
-       c) Abstract generalizable reasoning via Low-Rank Adaptation (LoRA) — extracting the minimal parameter delta that captures the pattern
+       c) Abstract generalizable reasoning via Low-Rank Adaptation (LoRA) - extracting the minimal parameter delta that captures the pattern
        d) Store as a DISTILLED entry with elevated confidence (+0.05 bonus)
        e) Link the distilled pattern to its source instances for traceability
        Example: 10 successful "element-not-found" fixes across different contexts
@@ -1301,14 +1293,14 @@ Task({
        - RETRIEVE: query forge-patterns for matching fix patterns (step 3)
        - JUDGE: evaluate success/failure and update confidence (step 2)
        - DISTILL: generalize high-success patterns into reusable LoRA-style abstractions (this step)
-       - CONSOLIDATE: integrate via Elastic Weight Consolidation (EWC++) to prevent catastrophic forgetting of successful patterns — never delete, only demote (step 2)
+       - CONSOLIDATE: integrate via Elastic Weight Consolidation (EWC++) to prevent catastrophic forgetting of successful patterns - never delete, only demote (step 2)
 
     7. Export learning metrics:
        npx @claude-flow/cli@latest neural train --pattern-type forge-fixes --epochs 5
 
     CONSTRAINTS:
     - NEVER promote a pattern that failed in the current cycle
-    - NEVER delete patterns — only demote below Bronze threshold
+    - NEVER delete patterns - only demote below Bronze threshold
     - NEVER override confidence scores without evidence from test results
     - NEVER generate predictions without historical data
 
@@ -1327,7 +1319,7 @@ Task({
 
 ## META-EVALUATION: LLM-AS-JUDGE REVIEW
 
-After the fix loop completes, a meta-evaluation step reviews the Bug Fixer's output using a different model perspective. This catches issues that the builder misses — production evidence shows LLM-as-Judge found 0.4% test coverage across 250+ files in 7 minutes (Issue #20), while Self-Reflection caught a non-existent widget crashing 3 features (Issue #21). Multiple approaches find different issues with multiplicative (not additive) value (Issue #22).
+After the fix loop completes, a meta-evaluation step reviews the Bug Fixer's output using a different model perspective. This catches issues that the builder misses - production evidence shows LLM-as-Judge found 0.4% test coverage across 250+ files in 7 minutes (Issue #20), while Self-Reflection caught a non-existent widget crashing 3 features (Issue #21). Multiple approaches find different issues with multiplicative (not additive) value (Issue #22).
 
 ### Activation
 
@@ -1349,8 +1341,8 @@ The judge model evaluates the Bug Fixer's output against:
 
 ### Verdict
 
-- **PASS:** All 5 dimensions satisfied — proceed to commit
-- **FAIL:** Any dimension fails — return to Bug Fixer with specific feedback
+- **PASS:** All 5 dimensions satisfied - proceed to commit
+- **FAIL:** Any dimension fails - return to Bug Fixer with specific feedback
 
 ### Output
 
@@ -1373,8 +1365,8 @@ The judge model evaluates the Bug Fixer's output against:
 The LLM-as-Judge architecture provides a provable anti-echo-chamber property:
 
 - **Provably different priors:** Bug Fixer (opus) and LLM-as-Judge (sonnet) use different model architectures with different training distributions. This guarantees their error modes are not identical.
-- **Error independence:** If each observer has p(error) < 0.5, the probability that ALL observers make the same error is p^N (exponentially decreasing). With N=2 (Driver + Observer), p(both wrong) < 0.25.
-- **High-stakes escalation:** For fixes below Silver confidence (< 0.75), require 3 independent priors (Driver + Observer + Failure Analyzer re-analysis). This reduces p(all wrong) < 0.125.
+- **Error independence:** If each observer has $p(\text{error}) < 0.5$, the probability that ALL observers make the same error is $p^N$ (exponentially decreasing). With N=2 (Driver + Observer), $P(\text{both wrong}) < 0.25$.
+- **High-stakes escalation:** For fixes below Silver confidence (< 0.75), require 3 independent priors (Driver + Observer + Failure Analyzer re-analysis). This reduces $P(\text{all wrong}) < 0.125$.
 - **Architectural diversity ceiling:** The multi-tier model routing (opus/sonnet/haiku) ensures that at least 2 distinct model architectures evaluate every fix before commit.
 
 ---
@@ -1393,12 +1385,12 @@ The LLM-as-Judge architecture provides a provable anti-echo-chamber property:
 | 6. Resilience | Offline handling, timeout handling, error states | Tested for target context | Warning only |
 | 7. Contract | API response matches expected schema | 0 mismatches | YES |
 
-### Prime Radiant — Continuous Verification Daemon
+### Prime Radiant - Continuous Verification Daemon
 
 The 7 quality gates collectively form the **Prime Radiant**: a continuous verification daemon that evaluates code correctness incrementally within each iteration, not just as an end-of-cycle batch.
 
-- **Streaming evaluation:** Gate results update as new evidence arrives. When Test Runner completes a test batch, Gate 1 (Functional) updates immediately — it does not wait for all tests to finish. This enables early termination on blocking failures.
-- **Čech nerve:** The bounded context open covers {U_i} form a Čech nerve N(U). Each simplex in the nerve corresponds to a set of contexts with non-empty intersection (shared dependencies). Gate 7 (Contract) evaluates on every simplex — verifying that shared types are consistent across all context overlaps.
+- **Streaming evaluation:** Gate results update as new evidence arrives. When Test Runner completes a test batch, Gate 1 (Functional) updates immediately - it does not wait for all tests to finish. This enables early termination on blocking failures.
+- **Čech nerve:** The bounded context open covers {U_i} form a Čech nerve N(U). Each simplex in the nerve corresponds to a set of contexts with non-empty intersection (shared dependencies). Gate 7 (Contract) evaluates on every simplex - verifying that shared types are consistent across all context overlaps.
 - **Inter-iteration cohomology:** Between iterations, the Learning Optimizer computes global cohomology H^*(N(U)) by analyzing gate results across all contexts. A non-zero H^1 triggers immediate commit rejection and cross-context contract re-validation.
 
 ### Gate Failure Categories
@@ -1452,7 +1444,7 @@ When gates fail, failures are categorized for targeted re-runs:
 | **R**efinement | Fix + Gate (iterative refinement until all gates pass) | Bug Fixer, Gate Enforcer, A11y Auditor |
 | **C**ompletion | Commit + Learn (verified completion with knowledge capture) | Auto-Committer, Learning Optimizer |
 
-Forge's pipeline is a REFINEMENT of SPARC — it decomposes each SPARC phase into operationally distinct agents with quality gates between phases, enabling autonomous iteration without human intervention.
+Forge's pipeline is a REFINEMENT of SPARC - it decomposes each SPARC phase into operationally distinct agents with quality gates between phases, enabling autonomous iteration without human intervention.
 
 ---
 
@@ -1529,8 +1521,8 @@ After each application:
 
 The asymmetric update rule (+0.05 success / -0.10 failure) implements a Nash equilibrium in the pattern confidence game:
 
-- **Break-even probability:** A pattern must succeed at least P(success) ≥ 2/3 ≈ 0.667 to maintain its confidence level. At exactly 2/3 success rate, expected confidence change per application = (2/3)(+0.05) + (1/3)(-0.10) = 0.
-- **Bronze threshold (0.70)** is set just above the equilibrium point (0.667) — a pattern that barely breaks even cannot auto-apply. Only patterns with demonstrated reliability above equilibrium advance.
+- **Break-even probability:** A pattern must succeed at least $P(\text{success}) \geq \frac{2}{3} \approx 0.667$ to maintain its confidence level. At exactly 2/3 success rate, expected confidence change per application = $\frac{2}{3}(+0.05) + \frac{1}{3}(-0.10) = 0$.
+- **Bronze threshold (0.70)** is set just above the equilibrium point (0.667) - a pattern that barely breaks even cannot auto-apply. Only patterns with demonstrated reliability above equilibrium advance.
 - **No incentive exploitation:** An agent cannot game the tier system by applying a pattern speculatively. The 2:1 penalty-to-reward ratio ensures that any strategy with < 67% success rate leads to demotion, making speculative application a losing strategy.
 - **Convergence guarantee:** Patterns converge to their true success rate over time. High-quality patterns rise to Platinum; unreliable patterns sink to Expired. The equilibrium prevents oscillation.
 
@@ -1544,9 +1536,9 @@ Before running tests, the Learning Optimizer analyzes historical data to predict
 
 1. **Files changed** since last green run (git diff against last-green-commit)
 2. **Historical failure rates** per bounded context (from forge-results namespace)
-3. **Fix pattern freshness** — recently applied fixes are more likely to regress
-4. **Complexity metrics** — contexts with more cyclomatic paths fail more often
-5. **Dependency chain length** — deeper dependency chains have higher failure rates
+3. **Fix pattern freshness** - recently applied fixes are more likely to regress
+4. **Complexity metrics** - contexts with more cyclomatic paths fail more often
+5. **Dependency chain length** - deeper dependency chains have higher failure rates
 
 ### Prediction Output
 
@@ -1562,7 +1554,7 @@ Before running tests, the Learning Optimizer analyzes historical data to predict
 }
 ```
 
-Tests are executed in descending probability order — predicted-to-fail tests run FIRST for faster convergence.
+Tests are executed in descending probability order - predicted-to-fail tests run FIRST for faster convergence.
 
 ---
 
@@ -1591,7 +1583,7 @@ criticality = (duration_weight × normalized_duration)
 | Criticality | Classification | Action |
 |-------------|---------------|--------|
 | > 0.8 | **Critical bottleneck** | Immediate optimization required |
-| 0.5 – 0.8 | **Moderate bottleneck** | Optimization recommended |
+| $0.5$-$0.8$ | **Moderate bottleneck** | Optimization recommended |
 | < 0.5 | **Healthy** | No action needed |
 
 ### Automatic Optimization Recommendations
@@ -1688,11 +1680,11 @@ For each target context, inject controlled failures:
 
 For UI-heavy projects, Forge captures and compares screenshots to detect unintended visual changes:
 
-1. **Before fix** — Capture baseline screenshots of all screens in the target context
-2. **After fix** — Capture new screenshots of the same screens
-3. **Compare** — Pixel-by-pixel comparison with configurable threshold (default: 0.1% diff tolerance)
-4. **Report** — Flag visual regressions as Gate 5 (Accessibility) warnings
-5. **Store** — Save screenshot diffs in memory for review
+1. **Before fix** - Capture baseline screenshots of all screens in the target context
+2. **After fix** - Capture new screenshots of the same screens
+3. **Compare** - Pixel-by-pixel comparison with configurable threshold (default: 0.1% diff tolerance)
+4. **Report** - Flag visual regressions as Gate 5 (Accessibility) warnings
+5. **Store** - Save screenshot diffs in memory for review
 
 **Screenshot Capture by Platform:**
 
@@ -1706,7 +1698,7 @@ For UI-heavy projects, Forge captures and compares screenshots to detect uninten
 **Configuration:**
 
 ```yaml
-# forge.config.yaml — Visual regression settings (optional)
+# forge.config.yaml - Visual regression settings (optional)
 visual_regression:
   enabled: true
   threshold: 0.001  # 0.1% pixel diff tolerance
@@ -1760,9 +1752,9 @@ Mutation testing verifies that your tests actually catch bugs by injecting delib
 
 | Mutation Score | Classification |
 |---------------|---------------|
-| > 85% | **Critical paths** — required for Gate 3 pass |
-| > 70% | **Overall codebase** — recommended minimum |
-| < 70% | **Insufficient** — test gaps exist |
+| > 85% | **Critical paths** - required for Gate 3 pass |
+| > 70% | **Overall codebase** - recommended minimum |
+| < 70% | **Insufficient** - test gaps exist |
 
 **Example Mutations:**
 
@@ -1781,7 +1773,7 @@ If any mutant survives (tests still pass), a test gap exists and Forge generates
 ## INVOCATION MODES
 
 ```bash
-# Full autonomous run — all contexts, all gates
+# Full autonomous run - all contexts, all gates
 /forge --autonomous --all
 
 # Single context autonomous
@@ -1848,13 +1840,13 @@ Each invocation mode controls which agents spawn, which phases execute, and what
 
 **Execution:**
 
-1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml — same as autonomous
+1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml - same as autonomous
 2. **Phase 2 (Specify):** Spec Verifier checks spec-to-test mapping completeness
 3. **Phase 3 (Test):** Test Runner executes the full test suite for targeted context(s)
-4. **Phase 4 (Fix):** SKIPPED — no fixes are generated or applied
+4. **Phase 4 (Fix):** SKIPPED - no fixes are generated or applied
 5. **Phase 5 (Gate):** Gate Enforcer evaluates Gate 1 (Functional), Gate 2 (Behavioral), and Gate 7 (Contract)
-6. **Phase 6 (Commit):** SKIPPED — no changes to commit
-7. **Phase 7 (Learn):** SKIPPED — no fix patterns to record
+6. **Phase 6 (Commit):** SKIPPED - no changes to commit
+7. **Phase 7 (Learn):** SKIPPED - no fix patterns to record
 
 **Output:** Pass/fail report per evaluated gate. No files are modified.
 
@@ -1881,12 +1873,12 @@ Each invocation mode controls which agents spawn, which phases execute, and what
 
 **Execution:**
 
-1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml — same as autonomous
+1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml - same as autonomous
 2. **Phase 2 (Specify):** Spec Verifier executes all 3 drift detection types:
    - **Static Drift:** Parse Gherkin steps and verify matching code paths exist
    - **Contract Drift:** Compare API specs in Gherkin against actual endpoint definitions (OpenAPI specs or route declarations)
    - **Behavioral Regression:** Analyze stored scenario history for stability/flaky/regressed status
-3. **Phases 3–7:** SKIPPED — no test execution, fixing, gating, committing, or learning
+3. **Phases 3–7:** SKIPPED - no test execution, fixing, gating, committing, or learning
 
 **Output:** Drift report with severity per finding. No files are modified.
 
@@ -1940,7 +1932,7 @@ Forces the LLM-as-Judge meta-evaluation (5-dimension rubric) after every Bug Fix
 
 1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml
 2. **Evaluate:** Apply the 5-dimension rubric (Functional Completeness, Error Handling, Contract Alignment, Existence Verification, Test Quality) against the most recent Bug Fixer output for the targeted context. If no prior output exists, evaluate the current test files and implementation code in the context.
-3. **Phases 3–7:** SKIPPED — no test execution, fixing, gating, committing, or learning
+3. **Phases 3–7:** SKIPPED - no test execution, fixing, gating, committing, or learning
 
 **Output:** JSON verdict with dimension-level pass/fail per the META-EVALUATION rubric. No files are modified.
 
@@ -1964,7 +1956,7 @@ Forces the LLM-as-Judge meta-evaluation (5-dimension rubric) after every Bug Fix
 
 **Purpose:** Run mutation testing scoped to critical code paths only, with a higher kill-rate threshold.
 
-**Critical path definition:** Functions in code paths matching Gate 3's critical path categories — authentication, payment processing, and core state machines. Specifically:
+**Critical path definition:** Functions in code paths matching Gate 3's critical path categories - authentication, payment processing, and core state machines. Specifically:
 - Authentication flows (login, signup, token refresh, session management)
 - Payment processing (charge, refund, subscription lifecycle)
 - Core state machines (order state transitions, booking lifecycle, workflow engines)
@@ -1979,7 +1971,7 @@ Forces the LLM-as-Judge meta-evaluation (5-dimension rubric) after every Bug Fix
 3. **Mutate:** Inject mutations only into identified critical-path functions: flip operators (`==` → `!=`), change constants, remove null checks, swap conditions
 4. **Execute:** Run the test suite against each mutant
 5. **Evaluate:** Apply kill-rate threshold of **>=85%** (vs >=70% for full `--mutation`)
-6. **Phases 6–7:** SKIPPED — no commits or learning
+6. **Phases 6–7:** SKIPPED - no commits or learning
 
 **Output:** Surviving mutants list with test gap recommendations. No files are modified.
 
@@ -2048,7 +2040,7 @@ Forces the LLM-as-Judge meta-evaluation (5-dimension rubric) after every Bug Fix
 
 ## OPTIONAL: AGENTIC QE INTEGRATION
 
-Forge can optionally integrate with the [Agentic QE](https://github.com/proffesor-for-testing/agentic-qe) framework via MCP for enhanced capabilities. **All AQE features are additive — Forge works identically without AQE.**
+Forge can optionally integrate with the [Agentic QE](https://github.com/proffesor-for-testing/agentic-qe) framework via MCP for enhanced capabilities. **All AQE features are additive - Forge works identically without AQE.**
 
 ### Detection
 
@@ -2056,28 +2048,28 @@ On startup, Forge checks for AQE availability:
 
 ```bash
 # Check if agentic-qe MCP server is registered
-claude mcp list | grep -q "aqe" && echo "AQE available" || echo "AQE not available — using defaults"
+claude mcp list | grep -q "aqe" && echo "AQE available" || echo "AQE not available - using defaults"
 ```
 
 ### Enhanced Capabilities When AQE Is Available
 
 | Forge Component | Without AQE (Default) | With AQE |
 |----------------|----------------------|----------|
-| **Pattern Storage** | claude-flow memory (`forge-patterns` namespace) | ReasoningBank — HNSW vector-indexed, 150x faster pattern search, experience replay |
-| **Defect Prediction** | Historical failure rates + file changes | `defect-intelligence` domain — root-cause-analyzer + defect-predictor agents |
-| **Security Scanning** | Gate 4 static checks (secrets, injection vectors) | `security-compliance` domain — full SAST/DAST via security-scanner agent |
-| **Accessibility Audit** | Forge Accessibility Auditor agent | `visual-accessibility` domain — visual-tester + accessibility-auditor agents |
-| **Contract Testing** | Gate 7 schema validation | `contract-testing` domain — contract-validator + graphql-tester agents |
+| **Pattern Storage** | claude-flow memory (`forge-patterns` namespace) | ReasoningBank - HNSW vector-indexed, 150x faster pattern search, experience replay |
+| **Defect Prediction** | Historical failure rates + file changes | `defect-intelligence` domain - root-cause-analyzer + defect-predictor agents |
+| **Security Scanning** | Gate 4 static checks (secrets, injection vectors) | `security-compliance` domain - full SAST/DAST via security-scanner agent |
+| **Accessibility Audit** | Forge Accessibility Auditor agent | `visual-accessibility` domain - visual-tester + accessibility-auditor agents |
+| **Contract Testing** | Gate 7 schema validation | `contract-testing` domain - contract-validator + graphql-tester agents |
 | **Progress Reporting** | `.forge/progress.jsonl` file | AG-UI streaming protocol for real-time UI updates |
 
 ### Fallback Behavior
 
-When AQE is NOT available, Forge falls back to its built-in behavior for every capability. No configuration is required — the skill auto-detects and adapts.
+When AQE is NOT available, Forge falls back to its built-in behavior for every capability. No configuration is required - the skill auto-detects and adapts.
 
 ### Configuration
 
 ```yaml
-# forge.config.yaml — AQE integration settings (optional)
+# forge.config.yaml - AQE integration settings (optional)
 integrations:
   agentic-qe:
     enabled: true  # auto-detected if not specified
@@ -2371,13 +2363,13 @@ npx @claude-flow/cli@latest memory store \
 
 When Bug Fixer's fix causes a cascade regression (tests in dependent contexts fail):
 
-1. **Halt** — Stop the fix loop for the affected context
-2. **Re-analyze** — Failure Analyzer examines both the original failure AND the cascade failure
-3. **Categorize** — Compare root cause categories:
+1. **Halt** - Stop the fix loop for the affected context
+2. **Re-analyze** - Failure Analyzer examines both the original failure AND the cascade failure
+3. **Categorize** - Compare root cause categories:
    - **Different root cause** → The fix is kept; the cascade failure is treated as a new, independent failure in the next loop iteration
    - **Same root cause** → The fix is reverted and the pattern is demoted (-0.10 confidence)
-4. **Revert limit** — Maximum 2 revert cycles per test before escalating to user review
-5. **Escalation** — If 2 reverts occur for the same test, Forge pauses and reports:
+4. **Revert limit** - Maximum 2 revert cycles per test before escalating to user review
+5. **Escalation** - If 2 reverts occur for the same test, Forge pauses and reports:
    ```
    ESCALATION: Test [testId] has regressed 2x after fix attempts.
    Original failure: [description]
@@ -2390,7 +2382,7 @@ When Bug Fixer's fix causes a cascade regression (tests in dependent contexts fa
 
 When two agents disagree (e.g., Bug Fixer wants to change a file that Spec Verifier says shouldn't change):
 
-1. **Quality Gate Enforcer acts as arbiter** — It evaluates both proposed states
+1. **Quality Gate Enforcer acts as arbiter** - It evaluates both proposed states
 2. **The change that results in more gates passing wins**
 3. **Tie-breaking order:**
    - Fewer files changed (prefer minimal diff)
@@ -2427,7 +2419,7 @@ npx @claude-flow/cli@latest hooks metrics --format json
 Forge can be extended per-project by creating a `forge.contexts.yaml` file alongside the skill:
 
 ```yaml
-# forge.contexts.yaml — Project-specific bounded contexts and screens
+# forge.contexts.yaml - Project-specific bounded contexts and screens
 contexts:
   - name: identity
     testFile: click_through_identity_full_test.dart
@@ -2468,7 +2460,7 @@ Before running Forge:
 - [ ] Backend built and running
 - [ ] Health check passes
 - [ ] Test data seeded via real API calls
-- [ ] No internal mocking — external services only (see Mocking Policy)
+- [ ] No internal mocking - external services only (see Mocking Policy)
 - [ ] Gherkin specs exist for target context (or will be generated)
 - [ ] All new screens/pages have test coverage
 - [ ] Edge cases documented and tested
