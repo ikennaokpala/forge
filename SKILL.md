@@ -19,6 +19,242 @@ Forge is a self-learning, autonomous quality engineering swarm that unifies thre
 
 ---
 
+## TOPOLOGICAL GOVERNANCE FOUNDATIONS
+
+Forge's autonomous pipeline is governed by topological invariants from the theory of topological governance in autonomous software engineering. Each subsection defines a formal specification that agents MUST follow. For infrastructure-dependent computations (Blake3, HNSW, WASM), the specification is defined with a readiness marker — agents approximate the computation via structured reasoning until native runtime is available.
+
+### 1.1 Sheaf-Theoretic Consistency Model
+
+Bounded contexts form a topological space where each context U_i is an open set. Quality gates produce local sections s_i ∈ F(U_i) over each context. Global consistency is verified via sheaf cohomology:
+
+- **H^0(F) = global sections** — Gate results that agree across all context overlaps. When H^0 is non-trivial, the swarm has achieved a globally consistent quality state.
+- **H^1(F) ≠ 0 = inter-context inconsistency** — A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally. **Action: If H^1(X; F) ≠ 0, REJECT the commit immediately. The codebase state cannot be glued consistently.**
+
+**Restriction maps:** For contexts U_i ⊇ U_j, the restriction ρ_{ij}: F(U_i) → F(U_j) is the projection of gate results onto the sub-context. Gate Enforcer verifies the cocycle condition: ρ_{ij} ∘ ρ_{jk} = ρ_{ik} on triple overlaps.
+
+**Mathematical anchors** (Betti numbers): β_0 = number of connected components in the context dependency graph (should be 1 for a well-connected system). β_1 = number of independent cycles (each cycle is a potential inconsistency loop requiring explicit contract validation).
+
+**Operational mapping:** Forge's cross-context dependency validation (Phase 2) and cascade re-testing IS the computation of restriction maps. Gate 7 (Contract) failures on shared types ARE non-zero H^1 elements.
+
+### 1.2 Sheaf Laplacian & Dirichlet Energy
+
+The discrete Sheaf Laplacian L_F is defined on the context dependency graph G = (V, E) where V = bounded contexts and E = dependency edges:
+
+```
+L_F = D_F - A_F
+```
+
+where D_F is the degree matrix weighted by restriction map norms and A_F is the adjacency matrix weighted by inter-context agreement.
+
+**Dirichlet energy** quantifies total system tension:
+
+```
+E(S) = Σ_{(i,j) ∈ E} ||ρ_{ij}(s_i) - ρ_{ji}(s_j)||²
+```
+
+where s_i is context i's gate result vector and ρ_{ij} is the restriction map from context i to the shared boundary with context j.
+
+**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy — the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. The stability threshold is E(S) ≤ 0.7. If E(S) > 0.7, the Hallucination Gate MUST close. The agent's generation is blocked and a Blake3 witness is generated detailing the topological constraint violated.
+
+### 1.3 Persistent Sheaf Laplacian
+
+The commit history defines a filtration F_0 ⊂ F_1 ⊂ ... ⊂ F_n where each F_t is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
+
+**Persistence barcodes** per Gherkin scenario:
+
+| Bar Type | Meaning | Forge Classification |
+|----------|---------|---------------------|
+| **Long bar** (born early, still alive) | Scenario has been stable across many commits | **Stable** (10+ consecutive passes) |
+| **Short bar** (born and dies quickly) | Scenario flickers between pass/fail | **Flaky** (alternating pass/fail) |
+| **Died bar** (was alive, now dead) | Scenario was passing, now consistently fails | **Regressed** (was stable, now failing) |
+
+**Operational mapping:** Forge's behavioral regression tracking — storing the last 50 results per scenario with stability scores (Stable/Flaky/Regressed) — IS the persistence diagram. The `first_failure_commit` field marks the birth of a homological feature (a new failure mode). The `stability_score` is the bar length normalized to [0, 1].
+
+### 1.4 Hallucination Gate — Deterministic Binary Boundary
+
+The Hallucination Gate is a 3-phase deterministic verification that runs BEFORE any LLM-as-Judge evaluation. It provides a binary PASS/FAIL boundary that cannot be fooled by probabilistic reasoning.
+
+**Phase 1 — AST Symbol Resolution:**
+Parse the fix diff's AST. Every referenced symbol (class, function, method, import, type) MUST resolve to an existing definition in the codebase or SDK. Unresolved symbols = immediate FAIL.
+
+**Phase 2 — Contract Hash Verification:**
+Compute SHA-256 hash of the API specification (OpenAPI/schema) before and after the fix. If the fix claims to be non-breaking but the contract hash changed, FAIL. Contract mutations require explicit declaration.
+
+**Phase 3 — Internal Mocking Detection:**
+Regex scan for `@patch`, `mock`, `stub`, `fake`, `spy` targeting internal module paths. Any match = immediate FAIL. This is Gate 4's existing deterministic check, elevated to the Hallucination Gate.
+
+**Gate ordering:** Primary gate = Hallucination Gate (deterministic). Secondary gate = LLM-as-Judge (probabilistic). A fix MUST pass the deterministic gate before the probabilistic gate is consulted. This prevents the "circular validation trap" where an LLM evaluates another LLM's output.
+
+**Operational mapping:** Bug Fixer's Self-Reflection Gate Step 3.5 dimension (e) "EXISTENCE CHECK" IS Phase 1. Gate 4's mocking detection IS Phase 3. This subsection elevates them to a formal pre-LLM boundary and adds Phase 2 (contract hash).
+
+### 1.5 Blake3 Cryptographic Witness Chain
+
+Every gate verdict produces a cryptographic witness record forming an append-only hash chain:
+
+```json
+{
+  "witness_id": "w-[gate]-[timestamp]",
+  "gate": "functional|behavioral|coverage|security|accessibility|resilience|contract",
+  "input_hash": "SHA-256 of test inputs + source files evaluated",
+  "output_hash": "SHA-256 of gate verdict + evidence",
+  "verdict": "PASS|FAIL",
+  "timestamp": "ISO-8601",
+  "prev_witness_hash": "SHA-256 of previous witness record in chain",
+  "chain_position": "integer"
+}
+```
+
+The chain is append-only — no witness can be modified after creation. Each witness references the previous, forming a tamper-evident log. Any break in the chain (hash mismatch) invalidates all subsequent witnesses.
+
+**Infrastructure Dependency:** Blake3 hashing algorithm
+**Readiness:** SPECIFICATION — agents use SHA-256 for witness hashing; computation is approximated via structured reasoning until Blake3 native runtime is available.
+**Activation:** When Blake3 runtime is detected, agents switch from SHA-256 to Blake3 for witness hashing.
+
+Witness records are stored in the `forge-witnesses` memory namespace with key pattern `witness-[gate]-[timestamp]`.
+
+### 1.6 Algebraic Connectivity & Spectral Analysis
+
+The agent collaboration graph G = (V, E) has 8 vertices (one per agent) and edges weighted by data flow volume between agents. The graph Laplacian L = D - A has eigenvalues 0 = λ_1 ≤ λ_2 ≤ ... ≤ λ_8.
+
+**Fiedler value λ₂** = algebraic connectivity of the swarm:
+
+**Hard requirement:** λ₂ MUST remain strictly > 0. A zero Fiedler value means the graph is disconnected — agents cannot coordinate.
+
+| λ₂ Range | Classification | Action |
+|----------|---------------|--------|
+| λ₂ ≥ 0.5 | **Well-connected** | Swarm is healthy, agents communicate effectively |
+| 0.1 ≤ λ₂ < 0.5 | **Weakly connected** | Monitor for emerging fragmentation |
+| 0 < λ₂ < 0.1 | **Near-fragmentation** | Warning — strengthen inter-agent data flow |
+| λ₂ ≈ 0 | **SWARM_FRAGMENTATION** | Instant MinCut isolation + forced synchronization event — agents are disconnected |
+
+**Spectral analysis procedure:**
+1. Construct adjacency matrix A from agent data flow (memory reads/writes between namespaces)
+2. Compute degree matrix D = diag(row sums of A)
+3. Compute Laplacian L = D - A
+4. Extract λ₂ (second-smallest eigenvalue)
+5. If λ₂ ≈ 0, execute MinCut isolation of disconnected subgraph + forced synchronization event. Emit SWARM_FRAGMENTATION alert to Learning Optimizer
+
+**Operational mapping:** Forge's criticality scoring and bottleneck detection IS spectral analysis of the agent graph — bottleneck detection identifies agents with disproportionate blocking impact, which corresponds to vertices whose removal would disconnect the graph (low algebraic connectivity).
+
+### 1.7 Dynamic MinCut Isolation
+
+When an agent produces anomalous output (e.g., Bug Fixer generates a fix that fails the Hallucination Gate 3+ times consecutively), the system computes MinCut(G, anomalous_agent, Auto-Committer) to determine the minimum set of edges to sever to prevent anomalous output from reaching the commit stage.
+
+**Quarantine protocol:**
+1. Agent's output is logged but NOT forwarded to downstream agents
+2. Failure Analyzer receives a QUARANTINE_ALERT with the agent's last 3 outputs
+3. Learning Optimizer demotes all patterns applied by the quarantined agent (-0.10 each)
+4. After root cause resolution, agent is un-quarantined and re-enters the pipeline
+
+**Operational mapping:** Forge's sequential pipeline topology naturally provides MinCut = 1 per agent — each agent can be isolated by severing its single output edge. The blocking gate architecture (Gate Enforcer blocks Auto-Committer) IS a MinCut isolation boundary.
+
+### 1.8 Hyperbolic Memory Architecture
+
+Agent knowledge is embedded in the Poincaré ball model B^d = {x ∈ ℝ^d : ||x|| < 1} where hierarchical code relationships are preserved by hyperbolic distance:
+
+```
+d_H(u, v) = arcosh(1 + 2||u - v||² / ((1 - ||u||²)(1 - ||v||²)))
+```
+
+This metric naturally represents code taxonomy: packages near the origin are high-level abstractions; leaves near the boundary are concrete implementations. Parent-child distances are short; cross-branch distances are exponentially large.
+
+**HNSW (Hierarchical Navigable Small World) index** over Poincaré embeddings enables O(log n) similarity search across the knowledge base — finding the most relevant fix pattern for a novel failure in sub-millisecond time.
+
+**Infrastructure Dependency:** Vector database with hyperbolic distance metric + HNSW index
+**Readiness:** SPECIFICATION — agents follow the hierarchical namespace structure; retrieval is approximated via key-based lookups across 10 namespaces until native vector DB is available.
+**Activation:** When HNSW-capable vector DB is detected (or AQE ReasoningBank is available), agents switch from key-based to vector-similarity retrieval.
+
+**Operational mapping:** Forge's 10 memory namespaces (forge-patterns, forge-results, forge-state, forge-commits, forge-screens, forge-specs, forge-contracts, forge-predictions, forge-criticality, forge-witnesses) ARE a flat approximation of the Poincaré ball — each namespace represents a region of the knowledge space. The Intelligence Plane is realized when these namespaces are backed by hyperbolic embeddings.
+
+### 1.9 GF(3) Triadic Validation
+
+Pipeline phase transitions are governed by Galois field GF(3) = {-1, 0, +1} trit values where:
+
+| GF(3) Trit | Role | Meaning |
+|------------|------|---------|
+| -1 | Generator | Agent that produces output (e.g., Bug Fixer generates a fix) |
+| 0 | Coordinator | Agent that orchestrates flow (e.g., Gate Enforcer routes decisions) |
+| +1 | Validator | Agent that verifies correctness (e.g., Test Runner validates behavior) |
+
+**Conservation law:** For any interacting triad of agents, the GF(3) sum MUST equal 0 (mod 3). Every generation (-1) must be balanced by a validation (+1) through a coordinator (0). If sum ≠ 0, block the transition and generate Narya-proofs documenting the conservation violation.
+
+**Phase mapping:**
+
+| Phase | GF(3) Index | Must Complete Before |
+|-------|-------------|---------------------|
+| Plan | 0 | Specify |
+| Specify | 1 | Test |
+| Test | 2 | Analyze |
+| Analyze | 3 | Fix |
+| Fix | 4 | Gate |
+| Gate | 5 | Commit |
+| Commit | 6 | Learn |
+| Learn | 7 | Next iteration |
+
+**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped — each phase's output is the next phase's input. The Generator→Coordinator→Validator triad maps directly to Forge's Bug Fixer(-1)→Gate Enforcer(0)→Test Runner(+1) cycle: -1 + 0 + 1 = 0 (mod 3).
+
+### 1.10 Narya-Proofs — Counterfactual Verification
+
+Every Bug Fixer fix generates a Narya-proof: a bidirectional type-checking artifact that proves the fix is both necessary and sufficient.
+
+**Forward type-check:** Apply the fix → run targeted tests → all PASS. This proves the fix is sufficient (it resolves the failure).
+
+**Backward type-check:** Remove the fix (revert) → run targeted tests → at least one FAIL. This proves the fix is necessary (without it, the failure persists).
+
+**Valid Narya-proof:** forward = PASS AND backward = FAIL.
+
+| Forward | Backward | Verdict | Interpretation |
+|---------|----------|---------|---------------|
+| PASS | FAIL | **VALID** | Fix is necessary and sufficient |
+| PASS | PASS | **COINCIDENTAL** | Fix is not the actual cause — tests pass without it |
+| FAIL | FAIL | **INSUFFICIENT** | Fix does not resolve the failure |
+| FAIL | PASS | **IMPOSSIBLE** | Logical contradiction — investigate test flakiness |
+
+**Infrastructure Dependency:** Automated bidirectional test execution with git stash/unstash
+**Readiness:** SPECIFICATION — agents follow the forward+backward verification protocol; full automation requires git-level rollback integration.
+**Activation:** When forge-witnesses namespace is active, Narya-proofs are stored as `narya-[fix-hash]` entries.
+
+**Operational mapping:** Bug Fixer's "targeted test re-run after fix" IS the forward type-check. The backward type-check is the new formal requirement — it ensures fixes are not coincidental.
+
+### 1.11 Sublinear Coverage via Johnson-Lindenstrauss
+
+For large test suites (n > 1000 tests), the Johnson-Lindenstrauss lemma guarantees that random projection from n dimensions to O(log n) dimensions preserves pairwise distances within (1 ± ε) factor.
+
+**Application:** Project n test cases onto O(log n) representative dimensions. Each dimension corresponds to a topological feature of the codebase (a module boundary, an API endpoint, a state machine transition). The representative subset covers the same topological features as the full suite with high probability.
+
+**Projection:**
+
+```
+representative_count = O(log(n) / ε²)
+```
+
+For n = 1000 tests and ε = 0.1: representative_count ≈ 70 tests (93% reduction).
+
+**Infrastructure Dependency:** Johnson-Lindenstrauss random projection matrix
+**Readiness:** SPECIFICATION — agents use defect prediction to prioritize tests (greedy approximation of JL projection); full JL computation requires matrix operations.
+**Activation:** When WASM runtime is available, agents compute exact JL projections for test selection.
+
+**Operational mapping:** Forge's defect prediction ordering (predicted-to-fail first) IS a greedy approximation of JL projection — it selects the tests most likely to cover novel failure modes, achieving sublinear convergence without computing the full projection matrix.
+
+### 1.12 WASM/Rust Execution Plane
+
+Deterministic verification tasks are specified as pure functions suitable for WASM/Rust compilation:
+
+| Task | Input | Output | Pure |
+|------|-------|--------|------|
+| Blake3 witness hashing | byte[] | hash | Yes |
+| Eigenvalue computation (λ₂) | adjacency matrix | float | Yes |
+| GF(3) phase validation | phase states | valid/invalid | Yes |
+| HNSW nearest-neighbor | query vector, index | top-k results | Yes |
+| Contract hash comparison | spec_before, spec_after | same/changed | Yes |
+| JL random projection | test matrix, target dim | projected matrix | Yes |
+
+**Infrastructure Dependency:** WASM runtime (e.g., Wasmtime, Wasmer) with Rust toolchain
+**Readiness:** SPECIFICATION — all tasks are defined as pure functions; agents execute equivalent logic via structured reasoning until WASM runtime is available.
+**Activation:** When WASM runtime is detected, deterministic tasks are offloaded from LLM reasoning to compiled execution for guaranteed correctness and sub-millisecond latency.
+
+---
+
 ## ARCHITECTURE ADAPTABILITY
 
 Forge adapts to any project architecture. Before first run, it discovers your project structure:
@@ -541,6 +777,21 @@ model_routing:
 
 When no override is specified, the defaults above are used. This routing reduces token cost by ~60% compared to running all agents on the highest-tier model.
 
+### Energy-Based Lane Routing
+
+The static agent-to-model mapping above serves as the default. At runtime, Coherence Energy (E) dynamically refines routing by selecting the appropriate processing lane for each task:
+
+| Lane | Energy Range | Processing | Latency | Description |
+|------|-------------|------------|---------|-------------|
+| **Reflex** | E < 0.1 | WASM engine / ruleset | < 1ms | Zero LLM calls — deterministic checks (threshold comparisons, hash validations, format checks) |
+| **Retrieval** | 0.1 ≤ E < 0.4 | Haiku-tier + RAG | ~10ms | Pattern-matched responses with retrieval-augmented context from forge-patterns |
+| **Heavy** | 0.4 ≤ E < 0.7 | Opus-tier deep analysis | ~100ms | First-principles reasoning for novel failures and complex fixes |
+| **Escalation** | E ≥ 0.7 | Pause swarm | Human review | Dirichlet energy exceeds stability threshold — swarm pauses and escalates to human |
+
+**How it works:** The existing UpgradeModel/DowngradeModel recommendations in criticality scoring already approximate energy-based routing. This formalizes those heuristics: when criticality is low (E < 0.1), skip the LLM entirely; when criticality exceeds the Dirichlet stability threshold (E ≥ 0.7), stop autonomous operation.
+
+**Lane selection rule:** For each agent task, compute Coherence Energy E from the criticality score. The lane determines the model tier regardless of the agent's static default — a Gate Enforcer task that normally runs on haiku will escalate to opus if E ∈ [0.4, 0.7), or pause the swarm entirely if E ≥ 0.7.
+
 ---
 
 ## PHASE 4: SPAWN AUTONOMOUS AGENTS
@@ -653,6 +904,16 @@ Task({
     6. If no matching pattern:
        - Perform root cause analysis from first principles
        - Generate fix hypothesis
+    6.5. MaTTS (Memory-Aware Test-Time Scaling) — For failures with no matching pattern:
+       Generate 3 parallel reasoning trajectories:
+       a) FORWARD: Trace execution from input → failure point. What state diverged?
+       b) BACKWARD: Start from the assertion failure → trace back to the divergence point
+       c) COUNTERFACTUAL: "If this fix were applied, would the failure disappear?"
+       Self-contrast analysis: Compare all 3 trajectories. Where do they agree = high-confidence
+       root cause. Where they diverge = investigate further. If all 3 agree on a root cause,
+       promote the analysis confidence by +0.10.
+       This implements MaTTS parallel trajectory generation with self-contrast — memory-aware
+       because each trajectory queries forge-patterns for historical context.
     7. Store analysis in memory for Bug Fixer:
        npx @claude-flow/cli@latest memory store \
          --key "analysis-[testId]-[timestamp]" \
@@ -736,6 +997,18 @@ Task({
        - Log the self-reflection finding for Learning Optimizer
 
        "Compilation does not equal Correctness." — validate existence and behavior.
+
+    3.6. DRIVER-OBSERVER ALGEBRAIC CONNECTIVITY:
+       Bug Fixer (opus) is the Driver; LLM-as-Judge (sonnet) is the Observer.
+       Track pair connectivity: λ₂(pair) = submissions_accepted / total_submissions.
+       - λ₂(pair) ≥ 0.5: Healthy collaboration — Driver and Observer agree frequently
+       - λ₂(pair) < 0.5: Divergence — Observer is rejecting too many fixes
+       - If Observer rejects 3+ consecutive submissions:
+         → Emit DECOUPLE_ALERT
+         → Request fresh root-cause analysis from Failure Analyzer
+         → Reset the fix approach from first principles (do not retry same strategy)
+       This prevents the Driver from fixating on a failing approach while the Observer
+       repeatedly flags the same issue — a form of pair-programming deadlock.
 
     4. Store the fix pattern with initial confidence:
        npx @claude-flow/cli@latest memory store \
@@ -823,6 +1096,17 @@ Task({
       --namespace forge-state
 
     ONLY signal Auto-Committer when ALL 7 GATES PASS.
+
+    BFT CONSENSUS MODEL:
+    The 7 gates operate as Byzantine Fault Tolerant validators:
+    - Consensus threshold: ≥5/7 gates must PASS for a non-blocking consensus
+    - Blocking gates (1-Functional, 2-Behavioral, 4-Security, 7-Contract) retain VETO power —
+      a single blocking gate FAIL overrides BFT consensus
+    - Non-blocking gates (3-Coverage, 5-Accessibility, 6-Resilience) participate in BFT consensus —
+      they contribute warnings but cannot unilaterally block
+    - CRDT counters: each gate maintains a grow-only PASS/FAIL counter across iterations.
+      Counters are monotonically increasing (append-only) — they cannot be decremented or reset.
+      This ensures gate history is tamper-evident across the autonomous loop.
 
     CONSTRAINTS:
     - NEVER approve a commit with ANY blocking gate failure
@@ -1003,6 +1287,22 @@ Task({
          --namespace forge-state
 
     6. Generate recommendations for test improvements
+
+    6.5. DISTILL — Complete the ReasoningBank cycle (RETRIEVE/JUDGE/DISTILL/CONSOLIDATE):
+       For fix patterns with ≥10 successful applications:
+       a) Extract the common structure across all successful instances
+       b) Generalize: replace context-specific values with pattern variables
+       c) Abstract generalizable reasoning via Low-Rank Adaptation (LoRA) — extracting the minimal parameter delta that captures the pattern
+       d) Store as a DISTILLED entry with elevated confidence (+0.05 bonus)
+       e) Link the distilled pattern to its source instances for traceability
+       Example: 10 successful "element-not-found" fixes across different contexts
+       → DISTILL into: "Always waitForElement before interaction on any async-rendered widget"
+       This completes the 4-phase ReasoningBank cycle:
+       - RETRIEVE: query forge-patterns for matching fix patterns (step 3)
+       - JUDGE: evaluate success/failure and update confidence (step 2)
+       - DISTILL: generalize high-success patterns into reusable LoRA-style abstractions (this step)
+       - CONSOLIDATE: integrate via Elastic Weight Consolidation (EWC++) to prevent catastrophic forgetting of successful patterns — never delete, only demote (step 2)
+
     7. Export learning metrics:
        npx @claude-flow/cli@latest neural train --pattern-type forge-fixes --epochs 5
 
@@ -1068,6 +1368,15 @@ The judge model evaluates the Bug Fixer's output against:
 }
 ```
 
+### Anti-Echo-Chamber Guarantee
+
+The LLM-as-Judge architecture provides a provable anti-echo-chamber property:
+
+- **Provably different priors:** Bug Fixer (opus) and LLM-as-Judge (sonnet) use different model architectures with different training distributions. This guarantees their error modes are not identical.
+- **Error independence:** If each observer has p(error) < 0.5, the probability that ALL observers make the same error is p^N (exponentially decreasing). With N=2 (Driver + Observer), p(both wrong) < 0.25.
+- **High-stakes escalation:** For fixes below Silver confidence (< 0.75), require 3 independent priors (Driver + Observer + Failure Analyzer re-analysis). This reduces p(all wrong) < 0.125.
+- **Architectural diversity ceiling:** The multi-tier model routing (opus/sonnet/haiku) ensures that at least 2 distinct model architectures evaluate every fix before commit.
+
 ---
 
 ## PHASE 5: QUALITY GATES
@@ -1083,6 +1392,14 @@ The judge model evaluates the Bug Fixer's output against:
 | 5. Accessibility | Accessible labels, target sizes, contrast | WCAG AA | Warning only |
 | 6. Resilience | Offline handling, timeout handling, error states | Tested for target context | Warning only |
 | 7. Contract | API response matches expected schema | 0 mismatches | YES |
+
+### Prime Radiant — Continuous Verification Daemon
+
+The 7 quality gates collectively form the **Prime Radiant**: a continuous verification daemon that evaluates code correctness incrementally within each iteration, not just as an end-of-cycle batch.
+
+- **Streaming evaluation:** Gate results update as new evidence arrives. When Test Runner completes a test batch, Gate 1 (Functional) updates immediately — it does not wait for all tests to finish. This enables early termination on blocking failures.
+- **Čech nerve:** The bounded context open covers {U_i} form a Čech nerve N(U). Each simplex in the nerve corresponds to a set of contexts with non-empty intersection (shared dependencies). Gate 7 (Contract) evaluates on every simplex — verifying that shared types are consistent across all context overlaps.
+- **Inter-iteration cohomology:** Between iterations, the Learning Optimizer computes global cohomology H^*(N(U)) by analyzing gate results across all contexts. A non-zero H^1 triggers immediate commit rejection and cross-context contract re-validation.
 
 ### Gate Failure Categories
 
@@ -1124,6 +1441,18 @@ When gates fail, failures are categorized for targeted re-runs:
 │  Gate failures are categorized for targeted re-runs (not full re-run) │
 └────────────────────────────────────────────────────────────────────────┘
 ```
+
+**SPARC Pipeline Mapping:** Forge's 8-phase pipeline is a refinement of the SPARC (Specification-Pseudocode-Architecture-Refinement-Completion) methodology:
+
+| SPARC Phase | Forge Phases | Agents |
+|-------------|-------------|--------|
+| **S**pecification | Plan + Specify | Spec Verifier |
+| **P**seudocode | Test (executable specs = pseudocode made concrete) | Test Runner |
+| **A**rchitecture | Analyze (root cause reveals architectural assumptions) | Failure Analyzer |
+| **R**efinement | Fix + Gate (iterative refinement until all gates pass) | Bug Fixer, Gate Enforcer, A11y Auditor |
+| **C**ompletion | Commit + Learn (verified completion with knowledge capture) | Auto-Committer, Learning Optimizer |
+
+Forge's pipeline is a REFINEMENT of SPARC — it decomposes each SPARC phase into operationally distinct agents with quality gates between phases, enabling autonomous iteration without human intervention.
 
 ---
 
@@ -1195,6 +1524,15 @@ After each application:
 - **Failure:** confidence -= 0.10 (floored at 0.0)
 - **Tier promotion** when crossing threshold upward
 - **Tier demotion** when crossing threshold downward
+
+### Nash Equilibrium Property
+
+The asymmetric update rule (+0.05 success / -0.10 failure) implements a Nash equilibrium in the pattern confidence game:
+
+- **Break-even probability:** A pattern must succeed at least P(success) ≥ 2/3 ≈ 0.667 to maintain its confidence level. At exactly 2/3 success rate, expected confidence change per application = (2/3)(+0.05) + (1/3)(-0.10) = 0.
+- **Bronze threshold (0.70)** is set just above the equilibrium point (0.667) — a pattern that barely breaks even cannot auto-apply. Only patterns with demonstrated reliability above equilibrium advance.
+- **No incentive exploitation:** An agent cannot game the tier system by applying a pattern speculatively. The 2:1 penalty-to-reward ratio ensures that any strategy with < 67% success rate leads to demotion, making speculative application a losing strategy.
+- **Convergence guarantee:** Patterns converge to their true success rate over time. High-quality patterns rise to Platinum; unreliable patterns sink to Expired. The equilibrium prevents oscillation.
 
 ---
 
@@ -1704,6 +2042,7 @@ Forces the LLM-as-Judge meta-evaluation (5-dimension rubric) after every Bug Fix
 | `forge-contracts` | API contract snapshots | `contract-snapshot-[timestamp]` |
 | `forge-predictions` | Defect prediction history | `prediction-[date]` |
 | `forge-criticality` | Agent performance metrics & bottleneck data | `criticality-[run-id]` |
+| `forge-witnesses` | Blake3 witness chain + Narya-proofs | `witness-[gate]-[ts]`, `narya-[fix-hash]` |
 
 ---
 
