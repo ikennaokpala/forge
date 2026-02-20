@@ -1,8 +1,8 @@
 # Forge
 
-**Quality forged in, not bolted on.**
+**Behavioral validation forged in, not bolted on.**
 
-Forge is an autonomous quality engineering swarm skill for [Claude Code](https://claude.com/claude-code) that combines BDD behavioral verification, 7 quality gates, confidence-tiered learning, and self-healing fix loops. It spawns 8 specialized agents that work in parallel to verify, test, fix, and commit — continuously — until every Gherkin scenario passes and every quality gate clears.
+Forge is an autonomous behavioral validation swarm skill for [Claude Code](https://claude.com/claude-code) that combines BDD behavioral verification, 7 behavioral validation gates, confidence-tiered learning, topological governance, and self-healing fix loops. It spawns 8 specialized agents that work in parallel to verify, test, fix, and commit — continuously — until every Gherkin scenario passes and every behavioral validation gate clears.
 
 ---
 
@@ -10,11 +10,12 @@ Forge is an autonomous quality engineering swarm skill for [Claude Code](https:/
 
 - **8 specialized agents** working in parallel with cost-optimized model routing
 - **Gherkin behavioral specifications** as the single source of truth
-- **7 quality gates**: Functional, Behavioral, Coverage, Security, Accessibility, Resilience, Contract
-- **Confidence-tiered fix patterns** (Platinum/Gold/Silver/Bronze) that evolve over time
+- **7 behavioral validation gates**: Functional, Behavioral, Coverage, Security, Accessibility, Resilience, Contract
+- **12 topological governance specifications** (§1.1–§1.12) — mathematical foundations for autonomous behavioral validation
+- **Confidence-tiered fix patterns** (Platinum/Gold/Silver/Bronze) with Nash Equilibrium convergence
 - **Defect prediction** based on historical failure data and file changes
 - **Chaos/resilience testing** with controlled failure injection
-- **Cross-context dependency awareness** with cascade re-testing
+- **Cross-context dependency awareness** with cascade re-testing and sheaf cohomology consistency
 - **Shared types and cross-cutting validation** across bounded contexts
 - **Agent-optimized ADRs** with MUST/MUST NOT constraints and verification commands
 - **Visual regression testing** with pixel-by-pixel comparison
@@ -22,11 +23,15 @@ Forge is an autonomous quality engineering swarm skill for [Claude Code](https:/
 - **Optional Agentic QE integration** for enhanced pattern search, security scanning, and more
 - **External-only mocking** — mock third-party services, never internal code (production-validated policy)
 - **Spec drift detection** — detects when Gherkin specs and implementation diverge
-- **LLM-as-Judge meta-review** — second-model evaluation of Bug Fixer output
+- **LLM-as-Judge meta-review** — second-model evaluation with Anti-Echo-Chamber guarantee
 - **Self-reflection gate** — Bug Fixer asks "What could go wrong?" before committing
-- **Agent criticality scoring** — bottleneck detection with automatic optimization
+- **Hallucination Gate** — deterministic pre-LLM boundary (AST resolution, contract hash, mocking detection)
+- **Agent criticality scoring** — bottleneck detection via Dirichlet energy and automatic optimization
+- **Narya-proofs** — counterfactual verification proving fix necessity and sufficiency
 - **Property-based testing** — generate 1000+ test cases from invariants
 - **Mutation testing** — inject bugs to verify test effectiveness
+- **Blake3 witness chain** — cryptographic tamper-evident audit trail for gate verdicts
+- **Infrastructure readiness markers** — specify formally, implement pragmatically, upgrade transparently
 
 ---
 
@@ -36,13 +41,13 @@ Forge is an autonomous quality engineering swarm skill for [Claude Code](https:/
 
 | Pillar | Source | What It Does |
 |--------|--------|--------------|
-| **Build** | DDD+ADR+TDD methodology | Structured development with quality gates, defect prediction, confidence-tiered fixes |
+| **Build** | DDD+ADR+TDD methodology | Structured development with behavioral validation gates, defect prediction, confidence-tiered fixes |
 | **Verify** | BDD/Gherkin behavioral specs | Continuous behavioral verification — the PRODUCT works, not just the CODE |
 | **Heal** | Autonomous E2E fix loop | Test → Analyze → Fix → Commit → Learn → Repeat |
 
 ### "DONE DONE"
 
-"DONE DONE" means: the code compiles AND the product behaves as specified. Every Gherkin scenario passes. Every quality gate clears. Every dependency graph is satisfied.
+"DONE DONE" means: the code compiles AND the product behaves as specified. Every Gherkin scenario passes. Every behavioral validation gate clears. Every dependency graph is satisfied.
 
 ---
 
@@ -71,8 +76,8 @@ cp SKILL.md ~/.claude/skills/forge.md
 | `/forge --add-coverage --screens [names]` | Add coverage for new screens/pages/components |
 | `/forge --spec-gen --context [name]` | Generate Gherkin specs for a context |
 | `/forge --spec-gen --all` | Generate Gherkin specs for all contexts |
-| `/forge --gates-only` | Run quality gates without test execution |
-| `/forge --gates-only --context [name]` | Run gates for single context |
+| `/forge --gates-only` | Run behavioral validation gates without test execution |
+| `/forge --gates-only --context [name]` | Run behavioral validation gates for single context |
 | `/forge --predict` | Defect prediction only |
 | `/forge --predict --context [name]` | Predict defects for single context |
 | `/forge --chaos --context [name]` | Chaos/resilience testing for a context |
@@ -115,7 +120,7 @@ Specify → Test → Analyze → Fix → Audit → Gate → Commit → Learn →
 │       │                                                           │
 │       └──────────────── REPEAT ──────────────────────────────────│
 │                                                                    │
-│  Loop continues until: ALL 7 GATES PASS or MAX_ITERATIONS (10)   │
+│  Loop continues until: ALL 7 VALIDATION GATES PASS or MAX 10    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -126,11 +131,11 @@ Specify → Test → Analyze → Fix → Audit → Gate → Commit → Learn →
 3. **Phase 2** — Contract & dependency validation (schemas, shared types, cross-cutting)
 4. **Phase 3** — Swarm initialization (load patterns, predictions, confidence tiers)
 5. **Phase 4** — Spawn 8 autonomous agents in parallel
-6. **Phase 5** — Quality gates evaluation (7 gates after every fix cycle)
+6. **Phase 5** — Behavioral validation gates evaluation (7 gates after every fix cycle, BFT consensus ≥5/7)
 
 ---
 
-## Quality Gates
+## Behavioral Validation Gates
 
 | Gate | Check | Threshold | Blocking |
 |------|-------|-----------|----------|
@@ -146,16 +151,42 @@ Specify → Test → Analyze → Fix → Audit → Gate → Commit → Learn →
 
 ## Agent Roles
 
-| Agent | Model | Role |
-|-------|-------|------|
-| **Specification Verifier** | Sonnet | Generates/validates Gherkin specs and ADRs for bounded contexts |
-| **Test Runner** | Haiku | Executes E2E test suites, parses results, maps failures to specs |
-| **Failure Analyzer** | Sonnet | Root cause analysis, pattern matching, dependency impact assessment |
-| **Bug Fixer** | Opus | Applies confidence-tiered fixes from first principles |
-| **Quality Gate Enforcer** | Haiku | Evaluates all 7 gates, arbitrates agent disagreements |
-| **Accessibility Auditor** | Sonnet | WCAG AA audit: labels, contrast, targets, focus order |
-| **Auto-Committer** | Haiku | Stages fixed files, creates detailed commits with gate statuses |
-| **Learning Optimizer** | Sonnet | Updates confidence tiers, defect prediction, coverage metrics |
+| Agent | Model | Role | v1.2.0 Enhancement |
+|-------|-------|------|--------------------|
+| **Specification Verifier** | Sonnet | Generates/validates Gherkin specs and ADRs for bounded contexts | — |
+| **Test Runner** | Haiku | Executes E2E test suites, parses results, maps failures to specs | — |
+| **Failure Analyzer** | Sonnet | Root cause analysis, pattern matching, dependency impact assessment | MaTTS — 3 parallel reasoning trajectories with self-contrast |
+| **Bug Fixer** | Opus | Applies confidence-tiered fixes from first principles | Driver-Observer algebraic connectivity (λ₂ monitoring) |
+| **Behavioral Validation Gate Enforcer** | Haiku | Evaluates all 7 gates, arbitrates agent disagreements | BFT consensus model (≥5/7 threshold, VETO for blocking gates) |
+| **Accessibility Auditor** | Sonnet | WCAG AA audit: labels, contrast, targets, focus order | — |
+| **Auto-Committer** | Haiku | Stages fixed files, creates detailed commits with gate statuses | — |
+| **Learning Optimizer** | Sonnet | Updates confidence tiers, defect prediction, coverage metrics | DISTILL phase — LoRA-style abstraction with EWC++ anti-forgetting |
+
+---
+
+## Topological Governance (v1.2.0)
+
+Forge v1.2.0 introduces 12 formal topological governance specifications (§1.1–§1.12) that provide mathematical foundations for autonomous behavioral validation. Production heuristics from v1.1.0 — criticality scoring, regression tracking, blocking gates — are now anchored to formal mathematical equivalents.
+
+### Four Specification Clusters
+
+| Cluster | Sections | Purpose |
+|---------|----------|---------|
+| **Consistency & Verification** | §1.1–§1.5 | Sheaf cohomology for cross-context consistency, Dirichlet energy for system tension, persistent Laplacian for regression tracking, Hallucination Gate for pre-LLM verification, Blake3 witness chain for tamper-evident audit |
+| **Swarm Stability** | §1.6–§1.7 | Algebraic connectivity (Fiedler value λ₂) for agent coordination monitoring, MinCut isolation for quarantining anomalous agent output |
+| **Memory & Reasoning** | §1.8–§1.11 | Hyperbolic memory (Poincaré ball) for hierarchical code embeddings, GF(3) triadic validation for phase transitions, Narya-proofs for counterfactual fix verification, Johnson-Lindenstrauss for sublinear test coverage |
+| **Execution Plane** | §1.12 | WASM/Rust pure-function tasks for deterministic verification (Blake3 hashing, eigenvalue computation, GF(3) validation, HNSW search, contract hash comparison, JL projection) |
+
+### Infrastructure Readiness
+
+Every specification is operational today. Infrastructure readiness markers define the path from "correct" to "correct and fast":
+
+| Specification | Current Implementation | Native Infrastructure |
+|---|---|---|
+| Blake3 witness chain (§1.5) | SHA-256 hashing | Blake3 native hashing |
+| Hyperbolic memory (§1.8) | Flat key-value lookups across 10 namespaces | HNSW-indexed Poincaré ball embeddings |
+| JL coverage (§1.11) | Defect prediction with failure probability ranking | Random projection to O(log n) representative tests |
+| WASM execution (§1.12) | LLM structured reasoning for pure functions | WASM/Rust compilation with sub-ms latency |
 
 ---
 
@@ -248,6 +279,7 @@ All AQE features are additive. Forge works identically without AQE installed.
 - [Build with Quality Skill: How I Build Software 10x Faster](https://www.linkedin.com/pulse/build-quality-skill-how-i-build-software-10x-faster-mondweep-chakravorty) — Mondweep Chakravorty
 - [claude-code-v3-qe-skill](https://github.com/mondweep/vibe-cast) — V3 QE Skill
 - [agentic-qe](https://github.com/proffesor-for-testing/agentic-qe) — Agentic QE Framework
+- Advanced Topological Governance in Autonomous Software Engineering — Formal mathematical foundations (sheaf theory, spectral analysis, Galois fields) for v1.2.0 specifications
 
 ---
 
