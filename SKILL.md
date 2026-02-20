@@ -25,36 +25,40 @@ Forge's autonomous pipeline is governed by topological invariants from the theor
 
 ### 1.1 Sheaf-Theoretic Consistency Model
 
-Bounded contexts form a topological space where each context $U_i$ is an open set. Quality gates produce local sections $s_i \in \mathcal{F}(U_i)$ over each context. Global consistency is verified via sheaf cohomology:
+Bounded contexts form a topological space where each context U_i is an open set. Quality gates produce local sections s_i ∈ F(U_i) over each context. Global consistency is verified via sheaf cohomology:
 
-- **$H^0(\mathcal{F})$ = global sections** - Gate results that agree across all context overlaps. When $H^0$ is non-trivial, the swarm has achieved a globally consistent quality state.
-- **$H^1(\mathcal{F}) \neq 0$ = inter-context inconsistency** - A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally. **Action: If $H^1(X;\, \mathcal{F}) \neq 0$, REJECT the commit immediately. The codebase state cannot be glued consistently.**
+- **H⁰(F) = global sections** - Gate results that agree across all context overlaps. When H⁰ is non-trivial, the swarm has achieved a globally consistent quality state.
+- **H¹(F) ≠ 0 = inter-context inconsistency** - A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally. **Action: If H¹(X; F) ≠ 0, REJECT the commit immediately. The codebase state cannot be glued consistently.**
 
-**Restriction maps:** For contexts $U_i \supseteq U_j$, the restriction $\rho_{ij}: \mathcal{F}(U_i) \to \mathcal{F}(U_j)$ is the projection of gate results onto the sub-context. Gate Enforcer verifies the cocycle condition: $\rho_{ij} \circ \rho_{jk} = \rho_{ik}$ on triple overlaps.
+**Restriction maps:** For contexts U_i ⊇ U_j, the restriction ρ_ij: F(U_i) → F(U_j) is the projection of gate results onto the sub-context. Gate Enforcer verifies the cocycle condition: ρ_ij ∘ ρ_jk = ρ_ik on triple overlaps.
 
-**Mathematical anchors** (Betti numbers): $\beta_0$ = number of connected components in the context dependency graph (should be 1 for a well-connected system). $\beta_1$ = number of independent cycles (each cycle is a potential inconsistency loop requiring explicit contract validation).
+**Mathematical anchors** (Betti numbers): β₀ = number of connected components in the context dependency graph (should be 1 for a well-connected system). β₁ = number of independent cycles (each cycle is a potential inconsistency loop requiring explicit contract validation).
 
 **Operational mapping:** Forge's cross-context dependency validation (Phase 2) and cascade re-testing IS the computation of restriction maps. Gate 7 (Contract) failures on shared types ARE non-zero H^1 elements.
 
 ### 1.2 Sheaf Laplacian & Dirichlet Energy
 
-The discrete Sheaf Laplacian $L_{\mathcal{F}}$ is defined on the context dependency graph $G = (V, E)$ where V = bounded contexts and E = dependency edges:
+The discrete Sheaf Laplacian L_F is defined on the context dependency graph G = (V, E) where V = bounded contexts and E = dependency edges:
 
-$$L_{\mathcal{F}} = D_{\mathcal{F}} - A_{\mathcal{F}}$$
+```math
+L_{\mathcal{F}} = D_{\mathcal{F}} - A_{\mathcal{F}}
+```
 
-where $D_{\mathcal{F}}$ is the degree matrix weighted by restriction map norms and $A_{\mathcal{F}}$ is the adjacency matrix weighted by inter-context agreement.
+where D_F is the degree matrix weighted by restriction map norms and A_F is the adjacency matrix weighted by inter-context agreement.
 
 **Dirichlet energy** quantifies total system tension:
 
-$$E(S) = \sum_{(i,j) \in E} \left\|\rho_{ij}(s_i) - \rho_{ji}(s_j)\right\|^2$$
+```math
+E(S) = \sum_{(i,j) \in E} \left\|\rho_{ij}(s_i) - \rho_{ji}(s_j)\right\|^2
+```
 
-where $s_i$ is context i's gate result vector and $\rho_{ij}$ is the restriction map from context i to the shared boundary with context j.
+where s_i is context i's gate result vector and ρ_ij is the restriction map from context i to the shared boundary with context j.
 
-**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy - the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. The stability threshold is $E(S) \leq 0.7$. If $E(S) > 0.7$, the Hallucination Gate MUST close. The agent's generation is blocked and a Blake3 witness is generated detailing the topological constraint violated.
+**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy - the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. The stability threshold is E(S) ≤ 0.7. If E(S) > 0.7, the Hallucination Gate MUST close. The agent's generation is blocked and a Blake3 witness is generated detailing the topological constraint violated.
 
 ### 1.3 Persistent Sheaf Laplacian
 
-The commit history defines a filtration $\mathcal{F}_0 \subset \mathcal{F}_1 \subset \cdots \subset \mathcal{F}_n$ where each $\mathcal{F}_t$ is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
+The commit history defines a filtration F₀ ⊂ F₁ ⊂ ... ⊂ F_n where each F_t is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
 
 **Persistence barcodes** per Gherkin scenario:
 
@@ -110,25 +114,25 @@ Witness records are stored in the `forge-witnesses` memory namespace with key pa
 
 ### 1.6 Algebraic Connectivity & Spectral Analysis
 
-The agent collaboration graph $G = (V, E)$ has 8 vertices (one per agent) and edges weighted by data flow volume between agents. The graph Laplacian $L = D - A$ has eigenvalues $0 = \lambda_1 \leq \lambda_2 \leq \cdots \leq \lambda_8$.
+The agent collaboration graph G = (V, E) has 8 vertices (one per agent) and edges weighted by data flow volume between agents. The graph Laplacian L = D - A has eigenvalues 0 = λ₁ ≤ λ₂ ≤ ... ≤ λ₈.
 
-**Fiedler value $\lambda_2$** = algebraic connectivity of the swarm:
+**Fiedler value λ₂** = algebraic connectivity of the swarm:
 
-**Hard requirement:** $\lambda_2$ MUST remain strictly > 0. A zero Fiedler value means the graph is disconnected - agents cannot coordinate.
+**Hard requirement:** λ₂ MUST remain strictly > 0. A zero Fiedler value means the graph is disconnected - agents cannot coordinate.
 
-| $\lambda_2$ Range | Classification | Action |
+| λ₂ Range | Classification | Action |
 |----------|---------------|--------|
-| $\lambda_2 \geq 0.5$ | **Well-connected** | Swarm is healthy, agents communicate effectively |
-| $0.1 \leq \lambda_2 < 0.5$ | **Weakly connected** | Monitor for emerging fragmentation |
-| $0 < \lambda_2 < 0.1$ | **Near-fragmentation** | Warning - strengthen inter-agent data flow |
-| $\lambda_2 \approx 0$ | **SWARM_FRAGMENTATION** | Instant MinCut isolation + forced synchronization event - agents are disconnected |
+| λ₂ ≥ 0.5 | **Well-connected** | Swarm is healthy, agents communicate effectively |
+| 0.1 ≤ λ₂ < 0.5 | **Weakly connected** | Monitor for emerging fragmentation |
+| 0 < λ₂ < 0.1 | **Near-fragmentation** | Warning - strengthen inter-agent data flow |
+| λ₂ ≈ 0 | **SWARM_FRAGMENTATION** | Instant MinCut isolation + forced synchronization event - agents are disconnected |
 
 **Spectral analysis procedure:**
 1. Construct adjacency matrix A from agent data flow (memory reads/writes between namespaces)
 2. Compute degree matrix D = diag(row sums of A)
-3. Compute Laplacian $L = D - A$
-4. Extract $\lambda_2$ (second-smallest eigenvalue)
-5. If $\lambda_2 \approx 0$, execute MinCut isolation of disconnected subgraph + forced synchronization event. Emit SWARM_FRAGMENTATION alert to Learning Optimizer
+3. Compute Laplacian L = D - A
+4. Extract λ₂ (second-smallest eigenvalue)
+5. If λ₂ ≈ 0, execute MinCut isolation of disconnected subgraph + forced synchronization event. Emit SWARM_FRAGMENTATION alert to Learning Optimizer
 
 **Operational mapping:** Forge's criticality scoring and bottleneck detection IS spectral analysis of the agent graph - bottleneck detection identifies agents with disproportionate blocking impact, which corresponds to vertices whose removal would disconnect the graph (low algebraic connectivity).
 
@@ -146,13 +150,15 @@ When an agent produces anomalous output (e.g., Bug Fixer generates a fix that fa
 
 ### 1.8 Hyperbolic Memory Architecture
 
-Agent knowledge is embedded in the Poincaré ball model $\mathbb{B}^d = \{x \in \mathbb{R}^d : \|x\| < 1\}$ where hierarchical code relationships are preserved by hyperbolic distance:
+Agent knowledge is embedded in the Poincaré ball model B^d = {x ∈ ℝ^d : ‖x‖ < 1} where hierarchical code relationships are preserved by hyperbolic distance:
 
-$$d_H(u, v) = \operatorname{arcosh}\!\left(1 + \frac{2\|u - v\|^2}{(1 - \|u\|^2)(1 - \|v\|^2)}\right)$$
+```math
+d_H(u, v) = \operatorname{arcosh}\!\left(1 + \frac{2\|u - v\|^2}{(1 - \|u\|^2)(1 - \|v\|^2)}\right)
+```
 
 This metric naturally represents code taxonomy: packages near the origin are high-level abstractions; leaves near the boundary are concrete implementations. Parent-child distances are short; cross-branch distances are exponentially large.
 
-**HNSW (Hierarchical Navigable Small World) index** over Poincaré embeddings enables $O(\log n)$ similarity search across the knowledge base - finding the most relevant fix pattern for a novel failure in sub-millisecond time.
+**HNSW (Hierarchical Navigable Small World) index** over Poincaré embeddings enables O(log n) similarity search across the knowledge base - finding the most relevant fix pattern for a novel failure in sub-millisecond time.
 
 **Infrastructure Dependency:** Vector database with hyperbolic distance metric + HNSW index
 **Readiness:** SPECIFICATION - agents follow the hierarchical namespace structure; retrieval is approximated via key-based lookups across 10 namespaces until native vector DB is available.
@@ -162,7 +168,7 @@ This metric naturally represents code taxonomy: packages near the origin are hig
 
 ### 1.9 GF(3) Triadic Validation
 
-Pipeline phase transitions are governed by Galois field $\mathrm{GF}(3) = \{-1,\, 0,\, +1\}$ trit values where:
+Pipeline phase transitions are governed by Galois field GF(3) = {-1, 0, +1} trit values where:
 
 | GF(3) Trit | Role | Meaning |
 |------------|------|---------|
@@ -185,7 +191,7 @@ Pipeline phase transitions are governed by Galois field $\mathrm{GF}(3) = \{-1,\
 | Commit | 6 | Learn |
 | Learn | 7 | Next iteration |
 
-**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped - each phase's output is the next phase's input. The Generator→Coordinator→Validator triad maps directly to Forge's Bug Fixer(-1)→Gate Enforcer(0)→Test Runner(+1) cycle: $-1 + 0 + 1 \equiv 0 \pmod{3}$.
+**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped - each phase's output is the next phase's input. The Generator→Coordinator→Validator triad maps directly to Forge's Bug Fixer(-1)→Gate Enforcer(0)→Test Runner(+1) cycle: -1 + 0 + 1 ≡ 0 (mod 3).
 
 ### 1.10 Narya-Proofs - Counterfactual Verification
 
@@ -212,15 +218,17 @@ Every Bug Fixer fix generates a Narya-proof: a bidirectional type-checking artif
 
 ### 1.11 Sublinear Coverage via Johnson-Lindenstrauss
 
-For large test suites (n > 1000 tests), the Johnson-Lindenstrauss lemma guarantees that random projection from n dimensions to $O(\log n)$ dimensions preserves pairwise distances within $(1 \pm \varepsilon)$ factor.
+For large test suites (n > 1000 tests), the Johnson-Lindenstrauss lemma guarantees that random projection from n dimensions to O(log n) dimensions preserves pairwise distances within (1 ± ε) factor.
 
-**Application:** Project n test cases onto $O(\log n)$ representative dimensions. Each dimension corresponds to a topological feature of the codebase (a module boundary, an API endpoint, a state machine transition). The representative subset covers the same topological features as the full suite with high probability.
+**Application:** Project n test cases onto O(log n) representative dimensions. Each dimension corresponds to a topological feature of the codebase (a module boundary, an API endpoint, a state machine transition). The representative subset covers the same topological features as the full suite with high probability.
 
 **Projection:**
 
-$$\text{representative\_count} = O\!\left(\frac{\log n}{\varepsilon^2}\right)$$
+```math
+\text{representative\_count} = O\!\left(\frac{\log n}{\varepsilon^2}\right)
+```
 
-For n = 1000 tests and $\varepsilon = 0.1$: representative_count ≈ 70 tests (93% reduction).
+For n = 1000 tests and ε = 0.1: representative_count ≈ 70 tests (93% reduction).
 
 **Infrastructure Dependency:** Johnson-Lindenstrauss random projection matrix
 **Readiness:** SPECIFICATION - agents use defect prediction to prioritize tests (greedy approximation of JL projection); full JL computation requires matrix operations.
@@ -235,7 +243,7 @@ Deterministic verification tasks are specified as pure functions suitable for WA
 | Task | Input | Output | Pure |
 |------|-------|--------|------|
 | Blake3 witness hashing | byte[] | hash | Yes |
-| Eigenvalue computation ($\lambda_2$) | adjacency matrix | float | Yes |
+| Eigenvalue computation (λ₂) | adjacency matrix | float | Yes |
 | GF(3) phase validation | phase states | valid/invalid | Yes |
 | HNSW nearest-neighbor | query vector, index | top-k results | Yes |
 | Contract hash comparison | spec_before, spec_after | same/changed | Yes |
@@ -775,14 +783,14 @@ The static agent-to-model mapping above serves as the default. At runtime, Coher
 
 | Lane | Energy Range | Processing | Latency | Description |
 |------|-------------|------------|---------|-------------|
-| **Reflex** | $E < 0.1$ | WASM engine / ruleset | < 1ms | Zero LLM calls - deterministic checks (threshold comparisons, hash validations, format checks) |
-| **Retrieval** | $0.1 \leq E < 0.4$ | Haiku-tier + RAG | ~10ms | Pattern-matched responses with retrieval-augmented context from forge-patterns |
-| **Heavy** | $0.4 \leq E < 0.7$ | Opus-tier deep analysis | ~100ms | First-principles reasoning for novel failures and complex fixes |
-| **Escalation** | $E \geq 0.7$ | Pause swarm | Human review | Dirichlet energy exceeds stability threshold - swarm pauses and escalates to human |
+| **Reflex** | E < 0.1 | WASM engine / ruleset | < 1ms | Zero LLM calls - deterministic checks (threshold comparisons, hash validations, format checks) |
+| **Retrieval** | 0.1 ≤ E < 0.4 | Haiku-tier + RAG | ~10ms | Pattern-matched responses with retrieval-augmented context from forge-patterns |
+| **Heavy** | 0.4 ≤ E < 0.7 | Opus-tier deep analysis | ~100ms | First-principles reasoning for novel failures and complex fixes |
+| **Escalation** | E ≥ 0.7 | Pause swarm | Human review | Dirichlet energy exceeds stability threshold - swarm pauses and escalates to human |
 
 **How it works:** The existing UpgradeModel/DowngradeModel recommendations in criticality scoring already approximate energy-based routing. This formalizes those heuristics: when criticality is low (E < 0.1), skip the LLM entirely; when criticality exceeds the Dirichlet stability threshold (E ≥ 0.7), stop autonomous operation.
 
-**Lane selection rule:** For each agent task, compute Coherence Energy E from the criticality score. The lane determines the model tier regardless of the agent's static default - a Gate Enforcer task that normally runs on haiku will escalate to opus if $E \in [0.4, 0.7)$, or pause the swarm entirely if $E \geq 0.7$.
+**Lane selection rule:** For each agent task, compute Coherence Energy E from the criticality score. The lane determines the model tier regardless of the agent's static default - a Gate Enforcer task that normally runs on haiku will escalate to opus if E ∈ [0.4, 0.7), or pause the swarm entirely if E ≥ 0.7.
 
 ---
 
@@ -1365,8 +1373,8 @@ The judge model evaluates the Bug Fixer's output against:
 The LLM-as-Judge architecture provides a provable anti-echo-chamber property:
 
 - **Provably different priors:** Bug Fixer (opus) and LLM-as-Judge (sonnet) use different model architectures with different training distributions. This guarantees their error modes are not identical.
-- **Error independence:** If each observer has $p(\text{error}) < 0.5$, the probability that ALL observers make the same error is $p^N$ (exponentially decreasing). With N=2 (Driver + Observer), $P(\text{both wrong}) < 0.25$.
-- **High-stakes escalation:** For fixes below Silver confidence (< 0.75), require 3 independent priors (Driver + Observer + Failure Analyzer re-analysis). This reduces $P(\text{all wrong}) < 0.125$.
+- **Error independence:** If each observer has p(error) < 0.5, the probability that ALL observers make the same error is p^N (exponentially decreasing). With N=2 (Driver + Observer), P(both wrong) < 0.25.
+- **High-stakes escalation:** For fixes below Silver confidence (< 0.75), require 3 independent priors (Driver + Observer + Failure Analyzer re-analysis). This reduces P(all wrong) < 0.125.
 - **Architectural diversity ceiling:** The multi-tier model routing (opus/sonnet/haiku) ensures that at least 2 distinct model architectures evaluate every fix before commit.
 
 ---
@@ -1521,7 +1529,7 @@ After each application:
 
 The asymmetric update rule (+0.05 success / -0.10 failure) implements a Nash equilibrium in the pattern confidence game:
 
-- **Break-even probability:** A pattern must succeed at least $P(\text{success}) \geq \frac{2}{3} \approx 0.667$ to maintain its confidence level. At exactly 2/3 success rate, expected confidence change per application = $\frac{2}{3}(+0.05) + \frac{1}{3}(-0.10) = 0$.
+- **Break-even probability:** A pattern must succeed at least P(success) ≥ 2/3 ≈ 0.667 to maintain its confidence level. At exactly 2/3 success rate, expected confidence change per application = (2/3)(+0.05) + (1/3)(-0.10) = 0.
 - **Bronze threshold (0.70)** is set just above the equilibrium point (0.667) - a pattern that barely breaks even cannot auto-apply. Only patterns with demonstrated reliability above equilibrium advance.
 - **No incentive exploitation:** An agent cannot game the tier system by applying a pattern speculatively. The 2:1 penalty-to-reward ratio ensures that any strategy with < 67% success rate leads to demotion, making speculative application a losing strategy.
 - **Convergence guarantee:** Patterns converge to their true success rate over time. High-quality patterns rise to Platinum; unreliable patterns sink to Expired. The equilibrium prevents oscillation.
@@ -1583,7 +1591,7 @@ criticality = (duration_weight × normalized_duration)
 | Criticality | Classification | Action |
 |-------------|---------------|--------|
 | > 0.8 | **Critical bottleneck** | Immediate optimization required |
-| $0.5$-$0.8$ | **Moderate bottleneck** | Optimization recommended |
+| 0.5–0.8 | **Moderate bottleneck** | Optimization recommended |
 | < 0.5 | **Healthy** | No action needed |
 
 ### Automatic Optimization Recommendations
