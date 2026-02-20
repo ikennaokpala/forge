@@ -23,6 +23,8 @@ Forge is a self-learning, autonomous quality engineering swarm that unifies thre
 
 Forge's autonomous pipeline is governed by topological invariants from the theory of topological governance in autonomous software engineering. Each subsection defines a formal specification that agents MUST follow. For infrastructure-dependent computations (Blake3, HNSW, WASM), the specification is defined with a readiness marker - agents approximate the computation via structured reasoning until native runtime is available.
 
+**Notation convention:** Display equations use ` ```math ` blocks with LaTeX. Inline math uses Unicode Greek letters (λ, ρ, ε, β), operators (≤, ≥, ∈, ⊂, ⊇, ∘), and subscripts/superscripts from the Superscripts and Subscripts block (λ₂, β₀, H⁰, Fₙ). Letter subscripts outside that block use underscore (s_i, ρ_ij); letter superscripts use caret (B^d, H^*).
+
 ### 1.1 Sheaf-Theoretic Consistency Model
 
 Bounded contexts form a topological space where each context U_i is an open set. Quality gates produce local sections s_i ∈ F(U_i) over each context. Global consistency is verified via sheaf cohomology:
@@ -34,7 +36,7 @@ Bounded contexts form a topological space where each context U_i is an open set.
 
 **Mathematical anchors** (Betti numbers): β₀ = number of connected components in the context dependency graph (should be 1 for a well-connected system). β₁ = number of independent cycles (each cycle is a potential inconsistency loop requiring explicit contract validation).
 
-**Operational mapping:** Forge's cross-context dependency validation (Phase 2) and cascade re-testing IS the computation of restriction maps. Gate 7 (Contract) failures on shared types ARE non-zero H^1 elements.
+**Operational mapping:** Forge's cross-context dependency validation (Phase 2) and cascade re-testing IS the computation of restriction maps. Gate 7 (Contract) failures on shared types ARE non-zero H¹ elements.
 
 ### 1.2 Sheaf Laplacian & Dirichlet Energy
 
@@ -58,7 +60,7 @@ where s_i is context i's gate result vector and ρ_ij is the restriction map fro
 
 ### 1.3 Persistent Sheaf Laplacian
 
-The commit history defines a filtration F₀ ⊂ F₁ ⊂ ... ⊂ F_n where each F_t is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
+The commit history defines a filtration F₀ ⊂ F₁ ⊂ ... ⊂ Fₙ where each Fₜ is the codebase state at commit t. The Persistent Sheaf Laplacian tracks how Dirichlet energy evolves across this filtration.
 
 **Persistence barcodes** per Gherkin scenario:
 
@@ -1399,7 +1401,7 @@ The 7 quality gates collectively form the **Prime Radiant**: a continuous verifi
 
 - **Streaming evaluation:** Gate results update as new evidence arrives. When Test Runner completes a test batch, Gate 1 (Functional) updates immediately - it does not wait for all tests to finish. This enables early termination on blocking failures.
 - **Čech nerve:** The bounded context open covers {U_i} form a Čech nerve N(U). Each simplex in the nerve corresponds to a set of contexts with non-empty intersection (shared dependencies). Gate 7 (Contract) evaluates on every simplex - verifying that shared types are consistent across all context overlaps.
-- **Inter-iteration cohomology:** Between iterations, the Learning Optimizer computes global cohomology H^*(N(U)) by analyzing gate results across all contexts. A non-zero H^1 triggers immediate commit rejection and cross-context contract re-validation.
+- **Inter-iteration cohomology:** Between iterations, the Learning Optimizer computes global cohomology H^*(N(U)) by analyzing gate results across all contexts. A non-zero H¹ triggers immediate commit rejection and cross-context contract re-validation.
 
 ### Gate Failure Categories
 
