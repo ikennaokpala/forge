@@ -28,7 +28,7 @@ Forge's autonomous pipeline is governed by topological invariants from the theor
 Bounded contexts form a topological space where each context U_i is an open set. Quality gates produce local sections s_i ∈ F(U_i) over each context. Global consistency is verified via sheaf cohomology:
 
 - **H^0(F) = global sections** — Gate results that agree across all context overlaps. When H^0 is non-trivial, the swarm has achieved a globally consistent quality state.
-- **H^1(F) ≠ 0 = inter-context inconsistency** — A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally.
+- **H^1(F) ≠ 0 = inter-context inconsistency** — A non-zero first cohomology group signals that local gate passes cannot be reconciled globally. Example: context A's contract tests pass against schema v2, but context B's contract tests assume schema v1. Both pass locally; the system fails globally. **Action: If H^1(X; F) ≠ 0, REJECT the commit immediately. The codebase state cannot be glued consistently.**
 
 **Restriction maps:** For contexts U_i ⊇ U_j, the restriction ρ_{ij}: F(U_i) → F(U_j) is the projection of gate results onto the sub-context. Gate Enforcer verifies the cocycle condition: ρ_{ij} ∘ ρ_{jk} = ρ_{ik} on triple overlaps.
 
@@ -54,7 +54,7 @@ E(S) = Σ_{(i,j) ∈ E} ||ρ_{ij}(s_i) - ρ_{ji}(s_j)||²
 
 where s_i is context i's gate result vector and ρ_{ij} is the restriction map from context i to the shared boundary with context j.
 
-**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy — the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. When criticality > 0.8 (critical bottleneck), the Dirichlet energy has exceeded the stability threshold.
+**Operational mapping:** Forge's criticality score IS a discretized Dirichlet energy — the weighted combination of duration, blocking impact, cost, and detection rate across the agent graph measures the same "tension" that the Sheaf Laplacian formalizes. The stability threshold is E(S) ≤ 0.7. If E(S) > 0.7, the Hallucination Gate MUST close. The agent's generation is blocked and a Blake3 witness is generated detailing the topological constraint violated.
 
 ### 1.3 Persistent Sheaf Laplacian
 
@@ -118,18 +118,21 @@ The agent collaboration graph G = (V, E) has 8 vertices (one per agent) and edge
 
 **Fiedler value λ₂** = algebraic connectivity of the swarm:
 
+**Hard requirement:** λ₂ MUST remain strictly > 0. A zero Fiedler value means the graph is disconnected — agents cannot coordinate.
+
 | λ₂ Range | Classification | Action |
 |----------|---------------|--------|
 | λ₂ ≥ 0.5 | **Well-connected** | Swarm is healthy, agents communicate effectively |
 | 0.1 ≤ λ₂ < 0.5 | **Weakly connected** | Monitor for emerging fragmentation |
-| λ₂ < 0.1 | **SWARM_FRAGMENTATION** | Alert — agents are operating in isolation, review pipeline topology |
+| 0 < λ₂ < 0.1 | **Near-fragmentation** | Warning — strengthen inter-agent data flow |
+| λ₂ ≈ 0 | **SWARM_FRAGMENTATION** | Instant MinCut isolation + forced synchronization event — agents are disconnected |
 
 **Spectral analysis procedure:**
 1. Construct adjacency matrix A from agent data flow (memory reads/writes between namespaces)
 2. Compute degree matrix D = diag(row sums of A)
 3. Compute Laplacian L = D - A
 4. Extract λ₂ (second-smallest eigenvalue)
-5. If λ₂ < 0.1, emit SWARM_FRAGMENTATION alert to Learning Optimizer
+5. If λ₂ ≈ 0, execute MinCut isolation of disconnected subgraph + forced synchronization event. Emit SWARM_FRAGMENTATION alert to Learning Optimizer
 
 **Operational mapping:** Forge's criticality scoring and bottleneck detection IS spectral analysis of the agent graph — bottleneck detection identifies agents with disproportionate blocking impact, which corresponds to vertices whose removal would disconnect the graph (low algebraic connectivity).
 
@@ -165,15 +168,15 @@ This metric naturally represents code taxonomy: packages near the origin are hig
 
 ### 1.9 GF(3) Triadic Validation
 
-Pipeline phase transitions are governed by Galois field GF(3) = {0, 1, 2} where:
+Pipeline phase transitions are governed by Galois field GF(3) = {-1, 0, +1} trit values where:
 
-| GF(3) Value | Phase State | Meaning |
-|-------------|------------|---------|
-| 0 | Not started | Phase has not begun |
-| 1 | In progress | Phase is actively executing |
-| 2 | Completed | Phase has finished successfully |
+| GF(3) Trit | Role | Meaning |
+|------------|------|---------|
+| -1 | Generator | Agent that produces output (e.g., Bug Fixer generates a fix) |
+| 0 | Coordinator | Agent that orchestrates flow (e.g., Gate Enforcer routes decisions) |
+| +1 | Validator | Agent that verifies correctness (e.g., Test Runner validates behavior) |
 
-**Conservation law:** The transition function T: GF(3) → GF(3) preserves ordering. Phase_i CANNOT reach state 2 (completed) if Phase_{i-1} < 2 (not yet completed). This is an algebraic invariant — it cannot be bypassed by prompt engineering or runtime override.
+**Conservation law:** For any interacting triad of agents, the GF(3) sum MUST equal 0 (mod 3). Every generation (-1) must be balanced by a validation (+1) through a coordinator (0). If sum ≠ 0, block the transition and generate Narya-proofs documenting the conservation violation.
 
 **Phase mapping:**
 
@@ -188,7 +191,7 @@ Pipeline phase transitions are governed by Galois field GF(3) = {0, 1, 2} where:
 | Commit | 6 | Learn |
 | Learn | 7 | Next iteration |
 
-**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped — each phase's output is the next phase's input.
+**Operational mapping:** Forge's "Plan Before Execute" mandate and sequential pipeline IS the operational implementation of GF(3) conservation. The blocking gate architecture enforces that no phase can be skipped — each phase's output is the next phase's input. The Generator→Coordinator→Validator triad maps directly to Forge's Bug Fixer(-1)→Gate Enforcer(0)→Test Runner(+1) cycle: -1 + 0 + 1 = 0 (mod 3).
 
 ### 1.10 Narya-Proofs — Counterfactual Verification
 
@@ -774,6 +777,21 @@ model_routing:
 
 When no override is specified, the defaults above are used. This routing reduces token cost by ~60% compared to running all agents on the highest-tier model.
 
+### Energy-Based Lane Routing
+
+The static agent-to-model mapping above serves as the default. At runtime, Coherence Energy (E) dynamically refines routing by selecting the appropriate processing lane for each task:
+
+| Lane | Energy Range | Processing | Latency | Description |
+|------|-------------|------------|---------|-------------|
+| **Reflex** | E < 0.1 | WASM engine / ruleset | < 1ms | Zero LLM calls — deterministic checks (threshold comparisons, hash validations, format checks) |
+| **Retrieval** | 0.1 ≤ E < 0.4 | Haiku-tier + RAG | ~10ms | Pattern-matched responses with retrieval-augmented context from forge-patterns |
+| **Heavy** | 0.4 ≤ E < 0.7 | Opus-tier deep analysis | ~100ms | First-principles reasoning for novel failures and complex fixes |
+| **Escalation** | E ≥ 0.7 | Pause swarm | Human review | Dirichlet energy exceeds stability threshold — swarm pauses and escalates to human |
+
+**How it works:** The existing UpgradeModel/DowngradeModel recommendations in criticality scoring already approximate energy-based routing. This formalizes those heuristics: when criticality is low (E < 0.1), skip the LLM entirely; when criticality exceeds the Dirichlet stability threshold (E ≥ 0.7), stop autonomous operation.
+
+**Lane selection rule:** For each agent task, compute Coherence Energy E from the criticality score. The lane determines the model tier regardless of the agent's static default — a Gate Enforcer task that normally runs on haiku will escalate to opus if E ∈ [0.4, 0.7), or pause the swarm entirely if E ≥ 0.7.
+
 ---
 
 ## PHASE 4: SPAWN AUTONOMOUS AGENTS
@@ -1274,15 +1292,16 @@ Task({
        For fix patterns with ≥10 successful applications:
        a) Extract the common structure across all successful instances
        b) Generalize: replace context-specific values with pattern variables
-       c) Store as a DISTILLED entry with elevated confidence (+0.05 bonus)
-       d) Link the distilled pattern to its source instances for traceability
+       c) Abstract generalizable reasoning via Low-Rank Adaptation (LoRA) — extracting the minimal parameter delta that captures the pattern
+       d) Store as a DISTILLED entry with elevated confidence (+0.05 bonus)
+       e) Link the distilled pattern to its source instances for traceability
        Example: 10 successful "element-not-found" fixes across different contexts
        → DISTILL into: "Always waitForElement before interaction on any async-rendered widget"
        This completes the 4-phase ReasoningBank cycle:
        - RETRIEVE: query forge-patterns for matching fix patterns (step 3)
        - JUDGE: evaluate success/failure and update confidence (step 2)
-       - DISTILL: generalize high-success patterns into reusable abstractions (this step)
-       - CONSOLIDATE: never delete, only demote — preserve full learning history (step 2)
+       - DISTILL: generalize high-success patterns into reusable LoRA-style abstractions (this step)
+       - CONSOLIDATE: integrate via Elastic Weight Consolidation (EWC++) to prevent catastrophic forgetting of successful patterns — never delete, only demote (step 2)
 
     7. Export learning metrics:
        npx @claude-flow/cli@latest neural train --pattern-type forge-fixes --epochs 5
@@ -1380,7 +1399,7 @@ The 7 quality gates collectively form the **Prime Radiant**: a continuous verifi
 
 - **Streaming evaluation:** Gate results update as new evidence arrives. When Test Runner completes a test batch, Gate 1 (Functional) updates immediately — it does not wait for all tests to finish. This enables early termination on blocking failures.
 - **Čech nerve:** The bounded context open covers {U_i} form a Čech nerve N(U). Each simplex in the nerve corresponds to a set of contexts with non-empty intersection (shared dependencies). Gate 7 (Contract) evaluates on every simplex — verifying that shared types are consistent across all context overlaps.
-- **Inter-iteration cohomology:** Between iterations, the Learning Optimizer computes global cohomology H^*(N(U)) by analyzing gate results across all contexts. A non-zero H^1 triggers cross-context contract re-validation in the next iteration.
+- **Inter-iteration cohomology:** Between iterations, the Learning Optimizer computes global cohomology H^*(N(U)) by analyzing gate results across all contexts. A non-zero H^1 triggers immediate commit rejection and cross-context contract re-validation.
 
 ### Gate Failure Categories
 
