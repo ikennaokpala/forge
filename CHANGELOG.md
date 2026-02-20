@@ -5,6 +5,62 @@ All notable changes to the Forge project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-20
+
+### Added
+
+- **External-only mocking policy** with Allowed/Forbidden lists and 3-point enforcement (Coverage Validator scan, Gate 4 block, Auto-Committer refusal)
+- **Spec drift detection** with 3 types: static drift (code paths vs Gherkin steps), contract drift (API specs vs endpoint definitions), behavioral regression (50-result history with Stable/Flaky/Regressed classification)
+- **LLM-as-Judge meta-evaluation** with 5-dimension rubric (Functional Completeness, Error Handling, Contract Alignment, Existence Verification, Test Quality). Auto-activates below Silver confidence, manual via `--meta-review`
+- **Bug Fixer self-reflection gate** (Step 3.5) with 5 dimensions: Completeness, Error Handling, Edge Cases, Contract Adherence, Existence Verification
+- **Fix strategy prioritization** — 4-tier priority order: PREFERRED (real implementation + in-memory DB), ACCEPTABLE (real + external-only mocks), LAST RESORT (contract-first), NEVER (mock internal services — 0% success rate evidence)
+- **Property-based testing** — invariant extraction from Gherkin `Then` clauses and ADR `MUST` constraints, 1000+ random test cases per invariant with automatic shrinking. Frameworks: Dart (`check`), JavaScript/TS (`fast-check`), Python (`hypothesis`), Rust (`proptest`/`quickcheck`), Go (`rapid`)
+- **Mutation testing** — operator flipping, constant changes, null check removal, condition swapping. Kill-rate targets: >=85% critical paths, >=70% overall codebase
+- **Agent criticality & bottleneck detection** — weighted scoring formula `(0.30 × duration) + (0.30 × blocking_impact) + (0.20 × cost) + (0.20 × detection_rate)`, thresholds >0.8 Critical / 0.5–0.8 Moderate / <0.5 Healthy, 5 auto-recommendations (AddParallelism, UpgradeModel, DowngradeModel, ReorderExecution, CacheResults)
+- **MODE-SPECIFIC BEHAVIOR section** — behavioral specs for `--verify-only`, `--drift-check`, `--meta-review`, `--mutation --critical-only` with agent spawn lists, phase execution rules, and JSON output format examples
+- **Mandatory Plan Before Execute directive** — every Forge invocation must call `EnterPlanMode` before executing
+- **8 new invocation modes**: `--drift-check`, `--regressions`, `--meta-review`, `--mutation`, `--mutation --critical-only`, `--predict`, `--chaos`, `--spec-gen`
+- **`forge-criticality` memory namespace** for agent performance trend analysis across runs
+
+### Changed
+
+- **Mocking policy**: from absolute "no mocking" ban to nuanced external-only policy with Allowed/Forbidden lists, code examples, and enforcement mechanisms
+- **Bug Fixer prompt**: added fix strategy prioritization (4-tier order with production evidence) and self-reflection gate (Step 3.5)
+- **Gate 4 (Security)**: enhanced with internal mocking violation check — blocks commits containing forbidden mock patterns
+- **Spec Verifier**: enhanced with drift analysis steps (static, contract, behavioral regression)
+- **Autonomous loop**: Plan step added as mandatory entry point before execution
+
+### Fixed
+
+- **Table rendering**: escaped pipe characters in Rust `proptest` example (SKILL.md L1400) that broke markdown table formatting
+
+### Validated
+
+- End-to-end Forge run against production client project (20 bounded contexts, 717 backend tests, 726 Gherkin scenarios, 10 OpenAPI specs)
+- 7 quality gates evaluated without errors
+- All 8 agent definitions verified intact
+- SKILL.md validated against advanced multi-agent governance theory (83% concept coverage across 29 dimensions)
+
+### Issues Addressed
+
+This release directly addresses 13 GitHub issues:
+
+| Issue | Title |
+|-------|-------|
+| #1 | Spec Drift Detection |
+| #2 | Behavioral Regression Alerts |
+| #5 | Property-Based Testing for AI Code Quality |
+| #7 | LLM-as-a-Judge for Automated Code Review |
+| #10 | Self-Reflection Patterns for Pre-Submission Quality |
+| #11 | Mutation Testing |
+| #20 | Agent #3 Results: LLM-as-Judge Found 0.4% Test Coverage |
+| #21 | Agent #6 Results: Self-Reflection Caught Non-Existent Widget |
+| #22 | Autonomous QA Orchestra Results: 48 Issues in 16 Minutes |
+| #24 | Policy Clarification: Mocking/Stubbing Guidelines |
+| #25 | Learnings from Production Orchestra |
+| #26 | 100% Success Rate + Cyclomatic Path Coverage |
+| #27 | Agent Criticality Analysis & Bottleneck Detection |
+
 ## [1.0.0] - 2026-02-07
 
 ### Added
@@ -160,4 +216,5 @@ This release was validated against and incorporates concepts from:
 3. **V3 QE Skill** (mondweep/vibe-cast) — Confidence tiers, 7 quality gates, TinyDancer model routing, coverage thresholds
 4. **Agentic QE** (proffesor-for-testing/agentic-qe) — ReasoningBank, 51 specialized agents, AG-UI protocol, BrowserSwarmCoordinator
 
+[1.1.0]: https://github.com/ikennaokpala/forge/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ikennaokpala/forge/releases/tag/v1.0.0
