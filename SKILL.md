@@ -1397,7 +1397,7 @@ Instead of writing individual test cases, define invariants that must hold for A
 | Dart/Flutter | `check` | `forAll(integer(), (n) => balance(n) >= 0)` |
 | JavaScript/TS | `fast-check` | `fc.assert(fc.property(fc.integer(), (n) => balance(n) >= 0))` |
 | Python | `hypothesis` | `@given(st.integers()) def test_balance(n): assert balance(n) >= 0` |
-| Rust | `proptest` / `quickcheck` | `proptest!(|(n: i32)| prop_assert!(balance(n) >= 0))` |
+| Rust | `proptest` / `quickcheck` | `proptest!(\|(n: i32)\| prop_assert!(balance(n) >= 0))` |
 | Go | `rapid` | `rapid.Check(t, func(t *rapid.T) { n := rapid.Int().Draw(t, "n"); assert(balance(n) >= 0) })` |
 
 **Invariant Sources:**
@@ -1493,6 +1493,200 @@ If any mutant survives (tests still pass), a test gap exists and Forge generates
 # Mutation testing
 /forge --mutation --context [context-name]
 /forge --mutation --critical-only
+```
+
+---
+
+## MODE-SPECIFIC BEHAVIOR
+
+Each invocation mode controls which agents spawn, which phases execute, and what output is produced. This section defines the exact behavior for modes that modify the default autonomous pipeline.
+
+### `--verify-only`
+
+**Purpose:** Validate that specs and tests pass without applying any fixes.
+
+**Agents spawned:** Spec Verifier, Test Runner, Gate Enforcer
+**Agents skipped:** Bug Fixer, Auto-Committer, Learning Optimizer, Failure Analyzer, A11y Auditor
+
+**Execution:**
+
+1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml — same as autonomous
+2. **Phase 2 (Specify):** Spec Verifier checks spec-to-test mapping completeness
+3. **Phase 3 (Test):** Test Runner executes the full test suite for targeted context(s)
+4. **Phase 4 (Fix):** SKIPPED — no fixes are generated or applied
+5. **Phase 5 (Gate):** Gate Enforcer evaluates Gate 1 (Functional), Gate 2 (Behavioral), and Gate 7 (Contract)
+6. **Phase 6 (Commit):** SKIPPED — no changes to commit
+7. **Phase 7 (Learn):** SKIPPED — no fix patterns to record
+
+**Output:** Pass/fail report per evaluated gate. No files are modified.
+
+```json
+{
+  "mode": "verify-only",
+  "context": "identity",
+  "gates": {
+    "functional": { "status": "PASS", "tests_run": 47, "tests_passed": 47 },
+    "behavioral": { "status": "FAIL", "mapped": 12, "unmapped": 2, "unmapped_scenarios": ["User resets password via SMS", "Admin revokes session"] },
+    "contract": { "status": "PASS", "endpoints_checked": 8, "mismatches": 0 }
+  },
+  "verdict": "FAIL",
+  "reason": "Gate 2 (Behavioral) has 2 unmapped scenarios"
+}
+```
+
+### `--drift-check`
+
+**Purpose:** Detect divergence between Gherkin specs, API contracts, and implementation without running tests or applying fixes.
+
+**Agents spawned:** Spec Verifier only
+**Agents skipped:** Test Runner, Bug Fixer, Auto-Committer, Learning Optimizer, Failure Analyzer, A11y Auditor, Gate Enforcer
+
+**Execution:**
+
+1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml — same as autonomous
+2. **Phase 2 (Specify):** Spec Verifier executes all 3 drift detection types:
+   - **Static Drift:** Parse Gherkin steps and verify matching code paths exist
+   - **Contract Drift:** Compare API specs in Gherkin against actual endpoint definitions (OpenAPI specs or route declarations)
+   - **Behavioral Regression:** Analyze stored scenario history for stability/flaky/regressed status
+3. **Phases 3–7:** SKIPPED — no test execution, fixing, gating, committing, or learning
+
+**Output:** Drift report with severity per finding. No files are modified.
+
+```json
+{
+  "mode": "drift-check",
+  "context": "payments",
+  "findings": [
+    {
+      "type": "static",
+      "severity": "BLOCKING",
+      "description": "POST /api/v1/payments/refund exists in implementation but has no Gherkin scenario",
+      "file": "src/payments/routes.rs",
+      "line": 142
+    },
+    {
+      "type": "contract",
+      "severity": "WARNING",
+      "description": "Gherkin expects field 'payment_id' but API returns 'id'",
+      "spec": "specs/payments.feature:34",
+      "endpoint": "GET /api/v1/payments/:id"
+    },
+    {
+      "type": "behavioral_regression",
+      "severity": "WARNING",
+      "description": "Scenario 'User completes checkout' regressed after 10 consecutive passes",
+      "scenario": "specs/payments.feature:48",
+      "first_failure_commit": "abc123",
+      "stability_score": 0.80
+    }
+  ],
+  "summary": { "BLOCKING": 1, "WARNING": 2, "INFO": 0 }
+}
+```
+
+### `--meta-review`
+
+**Purpose:** Force LLM-as-Judge evaluation of Bug Fixer output regardless of confidence tier.
+
+**Behavior:** Modifier flag that can be combined with other modes or used standalone.
+
+**When combined with `--autonomous`:**
+Forces the LLM-as-Judge meta-evaluation (5-dimension rubric) after every Bug Fixer cycle, regardless of confidence tier. Normally, meta-review activates only when fix confidence is below Silver (< 0.75). This flag overrides that threshold.
+
+**When used standalone (`/forge --meta-review` or `/forge --meta-review --context [name]`):**
+
+**Agents spawned:** Spec Verifier (for contract alignment check) + a judge-perspective model
+**Agents skipped:** Test Runner, Bug Fixer, Auto-Committer, Learning Optimizer, Failure Analyzer, A11y Auditor
+
+**Execution:**
+
+1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml
+2. **Evaluate:** Apply the 5-dimension rubric (Functional Completeness, Error Handling, Contract Alignment, Existence Verification, Test Quality) against the most recent Bug Fixer output for the targeted context. If no prior output exists, evaluate the current test files and implementation code in the context.
+3. **Phases 3–7:** SKIPPED — no test execution, fixing, gating, committing, or learning
+
+**Output:** JSON verdict with dimension-level pass/fail per the META-EVALUATION rubric. No files are modified.
+
+```json
+{
+  "mode": "meta-review",
+  "context": "identity",
+  "verdict": "FAIL",
+  "dimensions": {
+    "functional_completeness": { "status": "PASS", "evidence": "No TODOs or stubs found" },
+    "error_handling": { "status": "FAIL", "evidence": "Missing try-catch on /api/v1/auth/refresh POST" },
+    "contract_alignment": { "status": "PASS", "evidence": "All fields match Gherkin spec" },
+    "existence_verification": { "status": "PASS", "evidence": "All imports and references verified" },
+    "test_quality": { "status": "PASS", "evidence": "15 tests covering happy, error, and edge paths" }
+  },
+  "recommendation": "Add error handling for auth refresh endpoint before proceeding"
+}
+```
+
+### `--mutation --critical-only`
+
+**Purpose:** Run mutation testing scoped to critical code paths only, with a higher kill-rate threshold.
+
+**Critical path definition:** Functions in code paths matching Gate 3's critical path categories — authentication, payment processing, and core state machines. Specifically:
+- Authentication flows (login, signup, token refresh, session management)
+- Payment processing (charge, refund, subscription lifecycle)
+- Core state machines (order state transitions, booking lifecycle, workflow engines)
+
+**Agents spawned:** Test Runner (for mutant execution) + Gate Enforcer (for threshold evaluation)
+**Agents skipped:** Bug Fixer, Auto-Committer, Learning Optimizer, Spec Verifier, Failure Analyzer, A11y Auditor
+
+**Execution:**
+
+1. **Phase 1 (Plan):** Discover bounded contexts and load forge.config.yaml
+2. **Identify critical paths:** Scan targeted context(s) for functions in authentication, payment, and core state machine modules. Use directory structure, module names, and forge.config.yaml `critical_paths` configuration (if defined) to identify scope.
+3. **Mutate:** Inject mutations only into identified critical-path functions: flip operators (`==` → `!=`), change constants, remove null checks, swap conditions
+4. **Execute:** Run the test suite against each mutant
+5. **Evaluate:** Apply kill-rate threshold of **>=85%** (vs >=70% for full `--mutation`)
+6. **Phases 6–7:** SKIPPED — no commits or learning
+
+**Output:** Surviving mutants list with test gap recommendations. No files are modified.
+
+```json
+{
+  "mode": "mutation-critical-only",
+  "context": "payments",
+  "critical_paths_identified": [
+    "src/payments/charge.rs",
+    "src/payments/refund.rs",
+    "src/payments/subscription.rs"
+  ],
+  "mutants_generated": 42,
+  "mutants_killed": 38,
+  "mutants_survived": 4,
+  "kill_rate": 0.905,
+  "threshold": 0.85,
+  "verdict": "PASS",
+  "surviving_mutants": [
+    {
+      "file": "src/payments/refund.rs",
+      "line": 67,
+      "mutation": "Changed `amount > 0` to `amount >= 0`",
+      "recommendation": "Add test for zero-amount refund rejection"
+    },
+    {
+      "file": "src/payments/refund.rs",
+      "line": 103,
+      "mutation": "Removed null check on `transaction_id`",
+      "recommendation": "Add test for nil transaction_id in refund request"
+    },
+    {
+      "file": "src/payments/subscription.rs",
+      "line": 45,
+      "mutation": "Swapped `Active` → `Paused` in state transition",
+      "recommendation": "Add test verifying subscription activation sets state to Active"
+    },
+    {
+      "file": "src/payments/charge.rs",
+      "line": 29,
+      "mutation": "Changed `currency == 'USD'` to `currency != 'USD'`",
+      "recommendation": "Add explicit currency validation test for USD charges"
+    }
+  ]
+}
 ```
 
 ---
