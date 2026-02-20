@@ -117,76 +117,89 @@ dependencies:
 
 ---
 
-## CRITICAL: MOCKING/STUBBING POLICY
+## MOCKING POLICY: EXTERNAL ONLY, NEVER INTERNAL
 
-**CORE RULE: Mock ONLY external services and libraries. NEVER mock our internal code.**
+**RULE: Mock ONLY external services. NEVER mock internal code.**
 
-### What's Allowed ✅
+All tests run against the REAL backend API. Internal services, repositories, controllers, and models are NEVER mocked. Only third-party services outside your system boundary may be mocked or stubbed.
 
-Mock **external** dependencies that are:
-- Out of our control (Stripe, Google Places, Plaid, Firebase, AWS, Twilio, SendGrid)
-- Third-party libraries (Dio, axios, fetch, HTTP clients)
-- System dependencies (file system, network, time, random)
+**Production Evidence:** In production orchestra runs, 5/5 PR failures (100%) were traced to internal mocking violations. 5/5 PR successes (100%) used real implementations. (See Issues #24, #25)
 
-**Why**: External services are costly, rate-limited, slow, and may not have test environments.
+### Allowed — External Services Only
 
-### What's NOT Allowed ❌
+These are outside your system boundary and may be mocked:
 
-NEVER mock **our own code**:
-- ❌ Our backend API (UserService, OrderService, ApiService, UserRepository)
-- ❌ Our models/entities/value objects
-- ❌ Our repositories/providers/controllers
-- ❌ AI-generated code (anything we built)
+- **Payment processors:** Stripe, PayPal, Braintree
+- **Cloud services:** Firebase, AWS, GCP, Azure
+- **Communication:** Twilio, SendGrid, Mailgun
+- **Third-party APIs:** Google Places, Plaid, OAuth providers
+- **HTTP clients:** Dio, Axios, fetch (when calling external URLs)
+- **Infrastructure:** File system, network layer, system clock
 
-**Why**: Mocking our own code hides integration bugs, creates false confidence, and doesn't test actual data flow.
+### Forbidden — Internal Code (NEVER Mock)
 
-### Testing Strategy
+These are inside your system and must use real implementations:
 
-**Unit Tests**:
-- ✅ Mock external APIs (Stripe, Google Places)
-- ❌ Don't mock our services/repositories
-- Use real implementations with test data
+- **Your own services:** UserService, OrderService, PaymentService, ApiService
+- **Models & entities:** User, Order, Payment, any domain object
+- **Repositories & data access:** UserRepository, OrderRepository
+- **Controllers & providers:** Any application-layer code you wrote
+- **AI-generated code:** Any code produced by Forge or other agents
 
-**Integration Tests**:
-- ✅ Mock external APIs (optional, for speed)
-- ❌ Don't mock our internal code
-- Use in-memory database (SQLite, embedded Redis)
-- Test real service → real repository → test database
+### Testing Strategy by Layer
 
-**E2E/BDD Tests**:
-- ✅ Mock external APIs (optional)
-- ❌ Don't mock anything internal
-- Backend MUST be running and healthy
-- Full stack: UI → API → Database
+| Layer | Approach |
+|-------|----------|
+| **Integration tests** | Real services + in-memory database, mock only external APIs |
+| **E2E/BDD tests** | Real backend running locally, real API calls, real database |
+| **Contract tests** | Real API responses compared against expected schemas |
 
 ### Examples
 
-**✅ GOOD: Mock External Service**
-```dart
-// Payment processing test - mock Stripe (external)
-final mockStripe = MockStripeClient(); // ✅ External API
-final service = PaymentProcessor(stripe: mockStripe);
-when(mockStripe.createIntent(...)).thenReturn(intent);
+```python
+# GOOD: Mock external Stripe API
+@patch("src.services.stripe_client.StripeClient.create_charge")
+async def test_payment_flow(mock_stripe):
+    mock_stripe.return_value = {"id": "ch_test", "status": "succeeded"}
+    response = await client.post("/api/v1/payments", json=payment_data)
+    assert response.status_code == 201  # Real service, real DB, mocked Stripe
+
+# BAD: Mock internal OrderService — NEVER DO THIS
+@patch("src.services.order_service.OrderService.create_order")  # ❌ VIOLATION
+async def test_checkout(mock_order):
+    mock_order.return_value = Order(id=1)  # Hides real integration bugs
+    ...
+
+# CORRECT: Real implementation with test database
+async def test_checkout():
+    response = await client.post("/api/v1/checkout", json=checkout_data)
+    assert response.status_code == 201  # Real OrderService, real DB
+    order = await db.get(Order, response.json()["data"]["id"])
+    assert order is not None  # Verify real data flow
 ```
 
-**❌ BAD: Mock Internal Service**
-```dart
-// Controller test - mocking OUR service
-final mockOrderService = MockOrderService(); // ❌ OUR CODE!
-// This proves nothing about real integration
-```
+### Enforcement
 
-**✅ GOOD: Real Implementation**
-```dart
-// Controller test - real service + in-memory DB
-final testDb = await createInMemoryDatabase();
-final repo = OrderRepository(db: testDb); // ✅ Real repo
-final service = OrderService(repo: repo); // ✅ Real service
-final controller = OrderController(service: service); // ✅ Real controller
-// This proves real integration works
-```
+- **Coverage Validator:** Scans test files for internal mocking patterns — flags as CRITICAL violation
+- **Gate 4 (Security):** Includes internal mocking check — BLOCKS commit if detected
+- **Auto-Committer:** Refuses to commit code containing internal mock patterns
+- **Pattern:** Any `@patch`, `mock`, `stub`, `fake`, `spy` targeting internal module paths triggers a BLOCK
 
-**Policy Details**: See [issue #24](https://github.com/ikennaokpala/forge/issues/24) for full documentation.
+---
+
+## MANDATORY: PLAN BEFORE EXECUTE
+
+**Every Forge invocation MUST call `EnterPlanMode` before executing any tasks — no exceptions.**
+
+Before any phase begins, Forge enters planning mode to establish:
+
+1. **Task breakdown** — discrete units of work derived from the target context
+2. **Scope boundaries** — what is in-scope vs. out-of-scope for this run
+3. **Success criteria** — measurable outcomes mapped to the 7 quality gates
+4. **Dependencies** — backend readiness, test data, external service stubs
+5. **Strategy** — execution order, model routing, and iteration budget
+
+**No task execution begins without an approved plan.** This applies to all invocation modes: full swarm, single-gate re-runs, and targeted fixes. The plan is the contract between Forge and the developer — it ensures alignment before autonomous work starts.
 
 ---
 
@@ -313,6 +326,51 @@ If specs are missing for a target context, the Specification Verifier agent crea
 3. Generate Gherkin scenarios covering every cyclomatic path
 4. Write to `${SPEC_DIR}/[context].feature`
 5. Map each scenario to its corresponding test function
+
+### Spec Drift Detection
+
+Gherkin specs are the behavioral contract. When specs and implementation diverge, the product is broken regardless of whether tests pass. Forge detects three types of drift:
+
+**1. Static Drift — Code paths without matching specs**
+
+Parse Gherkin Given/When/Then steps and verify matching code paths exist in the implementation. Flag:
+- Implementation paths with no corresponding scenario (untested behavior)
+- Scenarios referencing code paths that no longer exist (stale specs)
+- New API endpoints with no behavioral specification
+
+**2. Contract Drift — API specs vs live responses**
+
+Compare API contracts defined in Gherkin scenarios against actual API responses:
+- Expected response fields vs actual response fields
+- Expected status codes vs actual status codes
+- Expected error formats vs actual error formats
+
+**3. Behavioral Regression Tracking**
+
+Store the last N results (default: 50) per scenario to detect regressions over time:
+
+```json
+{
+  "scenario": "User can complete payment",
+  "history": [true, true, true, true, false],
+  "stability_score": 0.80,
+  "consecutive_passes_before_fail": 4,
+  "first_failure_commit": "abc123",
+  "status": "REGRESSED"
+}
+```
+
+- **Stable** (10+ consecutive passes): scenario is reliable
+- **Flaky** (alternating pass/fail): scenario needs investigation
+- **Regressed** (was stable, now failing): high-priority alert with commit correlation
+
+**Drift Severity Levels:**
+
+| Severity | Meaning | Action |
+|----------|---------|--------|
+| **BLOCKING** | Implementation exists with no spec, or spec references removed code | Must resolve before Gate 2 |
+| **WARNING** | Contract field mismatch or flaky scenario detected | Report in gate results, investigate |
+| **INFO** | Minor drift (e.g., spec wording vs implementation naming) | Log for review |
 
 ### Agent-Optimized ADR Generation
 
@@ -508,6 +566,9 @@ Task({
        - Compare against existing scenarios
        - Flag scenarios that no longer match implementation (stale specs)
        - Generate new scenarios for uncovered features
+       - Run drift analysis: static drift (code paths vs spec steps),
+         contract drift (API schema vs spec expectations),
+         behavioral regression (historical pass/fail trends)
     5. Create spec-to-test mapping:
        - Each Scenario name → test function name
        - Store mapping in memory for Test Runner
@@ -635,15 +696,46 @@ Task({
        - Apply suggested fix with extra verification
        - Run targeted test before proceeding
 
-       BRONZE or NO PATTERN:
-       - Read the failing test file
-       - Read the source file causing the failure
-       - Implement fix from first principles
-       - Use defensive patterns appropriate to the test framework
+       BRONZE or NO PATTERN (use priority order):
+       1. PREFERRED: Real implementation + in-memory DB
+          - Use the actual service/repository with a test database
+          - No mocking of any internal code
+          - Seed test data through real API calls
+       2. ACCEPTABLE: Real implementation + external-only mocks
+          - Mock ONLY third-party services (Stripe, Firebase, etc.)
+          - All internal code paths exercised for real
+       3. LAST RESORT: Contract-first approach
+          - Define the expected API contract (OpenAPI/schema)
+          - Implement against the contract
+          - Validate with contract tests
+       4. NEVER: Mock internal services
+          - NEVER create mock classes for internal services
+          - NEVER stub repositories, controllers, or domain objects
+          - Production evidence: 0% success rate for internal mocking (Issue #25)
 
     3. After fixing, identify affected context:
        - Check dependency graph for cascade impacts
        - Flag dependent contexts for re-testing
+
+    3.5. SELF-REFLECTION GATE — Before storing the fix, ask "What could go wrong?":
+       Evaluate across 5 dimensions:
+       a) COMPLETENESS: Are there TODOs, placeholders, or stub implementations?
+       b) ERROR HANDLING: Are all async operations wrapped in try-catch? Are API
+          failures handled gracefully with user-facing error messages?
+       c) EDGE CASES: What happens with empty input, null values, very large data,
+          concurrent access, or rapid repeated actions?
+       d) CONTRACT ADHERENCE: Does the fix match the Gherkin spec exactly? Are field
+          names consistent between frontend and backend?
+       e) EXISTENCE CHECK: Does every widget, class, function, and import I used
+          actually exist in the SDK/framework? (Production evidence: non-existent
+          RadioGroup<T> widget crashed 3 core features — Issue #21)
+
+       If ANY dimension fails:
+       - Fix the issue before proceeding
+       - Re-run the targeted test to verify
+       - Log the self-reflection finding for Learning Optimizer
+
+       "Compilation does not equal Correctness." — validate existence and behavior.
 
     4. Store the fix pattern with initial confidence:
        npx @claude-flow/cli@latest memory store \
@@ -698,6 +790,7 @@ Task({
     - No XSS vectors in rendered output
     - No path traversal in file operations
     - Dependencies have no known critical CVEs (when lockfile available)
+    - No internal mocking violations (@patch/@mock targeting internal modules — BLOCKS commit)
     - When AQE available: delegate to security-scanner for full SAST analysis
 
     GATE 5 — ACCESSIBILITY (WCAG AA):
@@ -932,6 +1025,51 @@ Task({
 
 ---
 
+## META-EVALUATION: LLM-AS-JUDGE REVIEW
+
+After the fix loop completes, a meta-evaluation step reviews the Bug Fixer's output using a different model perspective. This catches issues that the builder misses — production evidence shows LLM-as-Judge found 0.4% test coverage across 250+ files in 7 minutes (Issue #20), while Self-Reflection caught a non-existent widget crashing 3 features (Issue #21). Multiple approaches find different issues with multiplicative (not additive) value (Issue #22).
+
+### Activation
+
+- **Automatic:** When fix confidence is below Silver (< 0.75)
+- **Manual:** `--meta-review` flag on any invocation mode
+- **Always-on:** Configurable in `forge.config.yaml` with `meta_review: always`
+
+### Rubric (5 Dimensions)
+
+The judge model evaluates the Bug Fixer's output against:
+
+| Dimension | PASS Criteria | FAIL Criteria |
+|-----------|--------------|---------------|
+| **Functional Completeness** | No TODOs, stubs, or placeholder implementations | Any TODO/FIXME/stub found |
+| **Error Handling** | All async operations wrapped in try-catch, user-facing error messages | Missing error handling on any API call |
+| **Contract Alignment** | Fix matches Gherkin spec exactly, field names consistent | Spec divergence or field name mismatch |
+| **Existence Verification** | Every widget/class/import exists in SDK/framework | Any reference to non-existent API |
+| **Test Quality** | Tests cover happy path, error path, and edge cases | Missing error or edge case coverage |
+
+### Verdict
+
+- **PASS:** All 5 dimensions satisfied — proceed to commit
+- **FAIL:** Any dimension fails — return to Bug Fixer with specific feedback
+
+### Output
+
+```json
+{
+  "verdict": "FAIL",
+  "dimensions": {
+    "functional_completeness": { "status": "PASS", "evidence": "No TODOs found" },
+    "error_handling": { "status": "FAIL", "evidence": "Missing try-catch on /api/v1/payments POST" },
+    "contract_alignment": { "status": "PASS", "evidence": "All fields match spec" },
+    "existence_verification": { "status": "PASS", "evidence": "All imports verified" },
+    "test_quality": { "status": "PASS", "evidence": "12 tests covering 3 paths" }
+  },
+  "recommendation": "Add error handling for payment API call before re-submission"
+}
+```
+
+---
+
 ## PHASE 5: QUALITY GATES
 
 7 gates evaluated after each fix cycle. ALL must pass before a commit is created.
@@ -968,19 +1106,20 @@ When gates fail, failures are categorized for targeted re-runs:
 ├────────────────────────────────────────────────────────────────────────┤
 │                                                                        │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐        │
-│  │ Specify  │───▶│   Test   │───▶│ Analyze  │───▶│   Fix    │        │
-│  │ (Gherkin)│    │ (Run)    │    │ (Root    │    │ (Tiered) │        │
-│  └──────────┘    └──────────┘    │  Cause)  │    └──────────┘        │
-│       ▲                          └──────────┘         │               │
-│       │                                               ▼               │
+│  │   Plan   │───▶│ Specify  │───▶│   Test   │───▶│ Analyze  │        │
+│  │ (Approve)│    │ (Gherkin)│    │ (Run)    │    │ (Root    │        │
+│  └──────────┘    └──────────┘    └──────────┘    │  Cause)  │        │
+│       ▲                                          └──────────┘        │
+│       │                                               │               │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐        │
 │  │  Learn   │◀───│  Commit  │◀───│  Gate    │◀───│  Audit   │        │
-│  │ (Update  │    │ (Auto)   │    │ (7 Gates)│    │ (A11y)   │        │
-│  │  Tiers)  │    └──────────┘    └──────────┘    └──────────┘        │
-│  └──────────┘                                                         │
+│  │ (Update  │    │ (Auto)   │    │ (7 Gates)│    │ (A11y +  │        │
+│  │  Tiers)  │    └──────────┘    └──────────┘    │  Fix)    │        │
+│  └──────────┘                                    └──────────┘        │
 │       │                                                                │
 │       └───────────────── REPEAT ──────────────────────────────────────│
 │                                                                        │
+│  Plan → Specify → Test → Analyze → Audit + Fix → Gate → Commit → Learn│
 │  Loop continues until: ALL 7 GATES PASS or MAX_ITERATIONS (10)        │
 │  Gate failures are categorized for targeted re-runs (not full re-run) │
 └────────────────────────────────────────────────────────────────────────┘
@@ -1089,6 +1228,67 @@ Tests are executed in descending probability order — predicted-to-fail tests r
 
 ---
 
+## AGENT CRITICALITY & BOTTLENECK DETECTION
+
+Forge continuously monitors agent performance to identify bottlenecks and optimize the orchestra. Each agent and quality gate receives a criticality score (0.0–1.0) that drives automatic optimization decisions.
+
+### Criticality Score Formula
+
+```
+criticality = (duration_weight × normalized_duration)
+            + (blocking_weight × blocking_impact)
+            + (cost_weight × normalized_cost)
+            + (detection_weight × issue_detection_rate)
+```
+
+| Factor | Weight | Description |
+|--------|--------|-------------|
+| **Duration** | 0.30 | Wall-clock time as fraction of total run |
+| **Blocking Impact** | 0.30 | Number of downstream agents/gates blocked while waiting |
+| **Model Cost** | 0.20 | Token cost as fraction of total run cost |
+| **Issue Detection Rate** | 0.20 | Ratio of real issues found to total items checked |
+
+### Bottleneck Thresholds
+
+| Criticality | Classification | Action |
+|-------------|---------------|--------|
+| > 0.8 | **Critical bottleneck** | Immediate optimization required |
+| 0.5 – 0.8 | **Moderate bottleneck** | Optimization recommended |
+| < 0.5 | **Healthy** | No action needed |
+
+### Automatic Optimization Recommendations
+
+When a bottleneck is detected, Forge recommends (and can auto-apply) these optimizations:
+
+| Recommendation | When Applied | Example |
+|---------------|-------------|---------|
+| **AddParallelism** | Duration high, work is splittable | Run Test Runner per context in parallel |
+| **UpgradeModel** | Detection rate low, cost is acceptable | Promote Failure Analyzer from sonnet → opus |
+| **DowngradeModel** | Cost high, detection rate already high | Demote Gate Enforcer from sonnet → haiku |
+| **ReorderExecution** | Blocking impact high | Move Gate 4 check earlier in the pipeline |
+| **CacheResults** | Same analysis repeated across runs | Cache contract snapshots between runs |
+
+### Metrics Storage
+
+```json
+{
+  "run_id": "forge-2026-02-19-001",
+  "agent_metrics": {
+    "bug-fixer": { "duration_ms": 45000, "cost_tokens": 12000, "issues_found": 3, "criticality": 0.72 },
+    "test-runner": { "duration_ms": 30000, "cost_tokens": 2000, "issues_found": 5, "criticality": 0.45 },
+    "gate-enforcer": { "duration_ms": 5000, "cost_tokens": 800, "issues_found": 1, "criticality": 0.15 }
+  },
+  "bottlenecks": ["bug-fixer"],
+  "recommendations": [
+    { "agent": "bug-fixer", "action": "CacheResults", "reason": "Same contract validation repeated 3x" }
+  ]
+}
+```
+
+Metrics are stored in the `forge-criticality` namespace for trend analysis across runs.
+
+---
+
 ## EXHAUSTIVE EDGE CASE TESTING
 
 ### General UI Element Edge Cases
@@ -1178,6 +1378,66 @@ visual_regression:
 
 When Agentic QE is available, delegate to the `visual-tester` agent for parallel viewport comparison across multiple screen sizes.
 
+### Property-Based Testing
+
+Instead of writing individual test cases, define invariants that must hold for ALL inputs. Forge extracts invariants from Gherkin specs and ADRs, then generates 1000+ random test cases per invariant.
+
+**Process:**
+
+1. Extract invariants from Gherkin scenarios and ADRs (e.g., "balance is always >= 0")
+2. Generate random inputs covering the input space (edge values, boundary conditions, random data)
+3. Run each invariant against all generated inputs
+4. On failure: automatically shrink to the minimal counterexample
+5. Report the minimal failing case with full reproduction steps
+
+**Framework Tools by Language:**
+
+| Language | Library | Example |
+|----------|---------|---------|
+| Dart/Flutter | `check` | `forAll(integer(), (n) => balance(n) >= 0)` |
+| JavaScript/TS | `fast-check` | `fc.assert(fc.property(fc.integer(), (n) => balance(n) >= 0))` |
+| Python | `hypothesis` | `@given(st.integers()) def test_balance(n): assert balance(n) >= 0` |
+| Rust | `proptest` / `quickcheck` | `proptest!(|(n: i32)| prop_assert!(balance(n) >= 0))` |
+| Go | `rapid` | `rapid.Check(t, func(t *rapid.T) { n := rapid.Int().Draw(t, "n"); assert(balance(n) >= 0) })` |
+
+**Invariant Sources:**
+
+- Gherkin `Then` clauses that assert universal properties ("balance is never negative")
+- ADR `MUST` constraints ("all prices must be positive")
+- Domain rules from bounded context definitions
+
+### Mutation Testing
+
+Mutation testing verifies that your tests actually catch bugs by injecting deliberate mutations into critical code paths and checking whether tests detect them.
+
+**Process:**
+
+1. Identify critical code paths (payment calculations, auth flows, state machines)
+2. Inject mutations: flip operators (`==` → `!=`), change constants, remove null checks, swap conditions
+3. Run the test suite against each mutant
+4. **Killed** = test caught the mutation (good). **Survived** = test missed it (gap found)
+5. Report mutation score and surviving mutants
+
+**Targets:**
+
+| Mutation Score | Classification |
+|---------------|---------------|
+| > 85% | **Critical paths** — required for Gate 3 pass |
+| > 70% | **Overall codebase** — recommended minimum |
+| < 70% | **Insufficient** — test gaps exist |
+
+**Example Mutations:**
+
+```
+Original:  if (amount > 0) { processPayment(amount); }
+Mutant 1:  if (amount >= 0) { processPayment(amount); }  // boundary
+Mutant 2:  if (amount < 0) { processPayment(amount); }   // negation
+Mutant 3:  if (true) { processPayment(amount); }          // constant
+Mutant 4:  // removed: processPayment(amount);             // deletion
+```
+
+If any mutant survives (tests still pass), a test gap exists and Forge generates a new test case to kill the mutant.
+
 ---
 
 ## INVOCATION MODES
@@ -1217,6 +1477,22 @@ When Agentic QE is available, delegate to the `visual-tester` agent for parallel
 # Chaos/resilience testing for a context
 /forge --chaos --context [context-name]
 /forge --chaos --all
+
+# Spec drift detection
+/forge --drift-check
+/forge --drift-check --context [context-name]
+
+# Behavioral regression analysis
+/forge --regressions
+/forge --regressions --context [context-name]
+
+# LLM-as-Judge meta-review
+/forge --meta-review
+/forge --meta-review --context [context-name]
+
+# Mutation testing
+/forge --mutation --context [context-name]
+/forge --mutation --critical-only
 ```
 
 ---
@@ -1233,6 +1509,7 @@ When Agentic QE is available, delegate to the `visual-tester` agent for parallel
 | `forge-specs` | Gherkin specifications | `specs-[context]-[timestamp]` |
 | `forge-contracts` | API contract snapshots | `contract-snapshot-[timestamp]` |
 | `forge-predictions` | Defect prediction history | `prediction-[date]` |
+| `forge-criticality` | Agent performance metrics & bottleneck data | `criticality-[run-id]` |
 
 ---
 
@@ -1654,10 +1931,11 @@ This separates the generic Forge engine from project-specific configuration, mak
 ## QUICK REFERENCE CHECKLIST
 
 Before running Forge:
+- [ ] Plan approved via EnterPlanMode
 - [ ] Backend built and running
 - [ ] Health check passes
 - [ ] Test data seeded via real API calls
-- [ ] No mocking of internal code (external services may be mocked)
+- [ ] No internal mocking — external services only (see Mocking Policy)
 - [ ] Gherkin specs exist for target context (or will be generated)
 - [ ] All new screens/pages have test coverage
 - [ ] Edge cases documented and tested

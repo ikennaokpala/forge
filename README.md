@@ -20,7 +20,13 @@ Forge is an autonomous quality engineering swarm skill for [Claude Code](https:/
 - **Visual regression testing** with pixel-by-pixel comparison
 - **Architecture-agnostic** — monolith, microservices, monorepo, mobile+backend
 - **Optional Agentic QE integration** for enhanced pattern search, security scanning, and more
-- **Mock external only, not our code** — tests run against real implementations with mocked external services ([#24](https://github.com/ikennaokpala/forge/issues/24))
+- **External-only mocking** — mock third-party services, never internal code (production-validated policy)
+- **Spec drift detection** — detects when Gherkin specs and implementation diverge
+- **LLM-as-Judge meta-review** — second-model evaluation of Bug Fixer output
+- **Self-reflection gate** — Bug Fixer asks "What could go wrong?" before committing
+- **Agent criticality scoring** — bottleneck detection with automatic optimization
+- **Property-based testing** — generate 1000+ test cases from invariants
+- **Mutation testing** — inject bugs to verify test effectiveness
 
 ---
 
@@ -71,6 +77,14 @@ cp SKILL.md ~/.claude/skills/forge.md
 | `/forge --predict --context [name]` | Predict defects for single context |
 | `/forge --chaos --context [name]` | Chaos/resilience testing for a context |
 | `/forge --chaos --all` | Chaos testing for all contexts |
+| `/forge --drift-check` | Spec drift detection |
+| `/forge --drift-check --context [name]` | Drift check for single context |
+| `/forge --regressions` | Behavioral regression analysis |
+| `/forge --regressions --context [name]` | Regressions for single context |
+| `/forge --meta-review` | LLM-as-Judge meta-evaluation |
+| `/forge --meta-review --context [name]` | Meta-review for single context |
+| `/forge --mutation --context [name]` | Mutation testing for a context |
+| `/forge --mutation --critical-only` | Mutation testing for critical paths only |
 
 ---
 
