@@ -5,6 +5,49 @@ All notable changes to the Forge project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-20
+
+### Added
+
+- **12 topological governance sections (§1.1–§1.12)** establishing mathematical foundations for autonomous QE:
+  - §1.1 Sheaf-Theoretic Consistency Model — global consistency via sheaf cohomology, H^1 ≠ 0 triggers commit rejection
+  - §1.2 Sheaf Laplacian & Dirichlet Energy — system tension quantification with stability threshold E(S) ≤ 0.7
+  - §1.3 Persistent Sheaf Laplacian — commit-history filtration with persistence barcodes for Stable/Flaky/Regressed classification
+  - §1.4 Hallucination Gate — deterministic 3-phase pre-LLM verification (AST resolution, contract hash, internal mocking detection)
+  - §1.5 Blake3 Cryptographic Witness Chain — append-only hash chain for gate verdicts in `forge-witnesses` namespace
+  - §1.6 Algebraic Connectivity & Spectral Analysis — Fiedler value λ₂ monitoring with fragmentation thresholds
+  - §1.7 Dynamic MinCut Isolation — quarantine protocol for anomalous agent output
+  - §1.8 Hyperbolic Memory Architecture — Poincaré ball embeddings with HNSW readiness marker
+  - §1.9 GF(3) Triadic Validation — Galois field phase transition governance with conservation law
+  - §1.10 Narya-Proofs — counterfactual verification (necessity + sufficiency) for every fix
+  - §1.11 Sublinear Coverage via Johnson-Lindenstrauss — random projection for O(log n) representative test selection
+  - §1.12 WASM/Rust Execution Plane — six pure-function tasks specified for WASM compilation
+- **8 inline agent enhancements** integrating topological foundations into agent prompts:
+  - Bug Fixer: Driver-Observer Algebraic Connectivity (λ₂ monitoring)
+  - Failure Analyzer: MaTTS — 3 parallel reasoning trajectories with self-contrast
+  - Learning Optimizer: DISTILL phase — LoRA-style abstraction with EWC++ anti-forgetting
+  - Gate Enforcer: BFT Consensus Model — ≥5/7 threshold with blocking gate VETO power
+  - Execution Loop: SPARC Pipeline Mapping (8-phase → 5-stage)
+  - LLM-as-Judge: Anti-Echo-Chamber Guarantee — ≥2 model architectures, P(both wrong) < 0.25
+  - Confidence Tiers: Nash Equilibrium Property — break-even at P(success) ≥ 2/3
+  - Quality Gates: Continuous Verification Daemon — incremental evaluation with Čech nerve structure
+- **`forge-witnesses` memory namespace** for cryptographic witness chain and Narya-proof storage
+- **Infrastructure readiness markers** for Blake3, HNSW, JL projections, and WASM/Rust runtime
+
+### Changed
+
+- **Concept coverage**: 83% → 100% across 29 evaluation dimensions from advanced multi-agent governance theory
+- **Blog post** (`docs/blog/forge-v1-evolution.md`): updated with v1.2.0 topological governance narrative, 4 new sections, updated roadmap
+
+### Validated
+
+- All 29 concepts from "Advanced Topological Governance in Autonomous Software Engineering" now have formal specifications
+- 12 topological sections integrate cleanly with existing 8-agent autonomous loop
+- Infrastructure readiness markers defined for all specification-to-runtime transitions
+- Every inline agent enhancement anchored to a specific topological specification
+
+[1.2.0]: https://github.com/ikennaokpala/forge/compare/v1.1.0...v1.2.0
+
 ## [1.1.0] - 2026-02-20
 
 ### Added
